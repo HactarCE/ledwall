@@ -1,11 +1,10 @@
 use std::time::{Duration, Instant};
 
-use ledwall::{App, FPS, HEIGHT, WIDTH};
+use ledwall::{App, FPS, HEIGHT, Input, WIDTH};
 use macroquad::prelude::*;
 
 const SCALE_FACTOR: f32 = 10.0;
 const PADDING: f32 = 25.0;
-const FPS_COUNTER: bool = false;
 
 const X_PADDING: f32 = PADDING;
 const TOP_PADDING: f32 = PADDING;
@@ -27,14 +26,34 @@ async fn main() {
     let texture = Texture2D::from_rgba8(WIDTH as u16, HEIGHT as u16, &rgba_buffer);
     texture.set_filter(FilterMode::Nearest);
 
+    let mut show_fps = false;
+
     loop {
         // Wait for next frame
         let now = Instant::now();
         std::thread::sleep(next_frame_time.saturating_duration_since(now));
         next_frame_time = now + Duration::from_secs_f64(1.0 / FPS as f64);
 
+        // Toggle FPS counter
+        if is_key_pressed(KeyCode::F) {
+            show_fps ^= true;
+        }
+
+        // Take input
+        let input = Input {
+            up: is_key_down(KeyCode::Up) || is_key_down(KeyCode::W),
+            down: is_key_down(KeyCode::Down) || is_key_down(KeyCode::S),
+            left: is_key_down(KeyCode::Left) || is_key_down(KeyCode::A),
+            right: is_key_down(KeyCode::Right) || is_key_down(KeyCode::D),
+            a: is_key_down(KeyCode::L),
+            b: is_key_down(KeyCode::Comma),
+            x: is_key_down(KeyCode::K),
+            y: is_key_down(KeyCode::M),
+            ..Default::default()
+        };
+
         // Update app
-        app.update();
+        app.update(input);
 
         // Update display
         rgb_to_rgba(&mut rgba_buffer, app.buffer());
@@ -52,9 +71,11 @@ async fn main() {
                 ..Default::default()
             },
         );
-        if FPS_COUNTER {
+
+        if show_fps {
             draw_fps();
         }
+
         next_frame().await;
     }
 }
