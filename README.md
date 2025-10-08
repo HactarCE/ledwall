@@ -2,6 +2,17 @@
 
 32x64 RGB LED wall that runs on a Raspberry Pi
 
+## Issues
+
+### Tetris
+
+- DAS on move
+- no repeat on hard drop and rotate
+- fall
+- lock down
+- review mappings
+- more rendering
+
 ## Testing
 
 ```sh

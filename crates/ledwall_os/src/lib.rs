@@ -1,5 +1,13 @@
 use std::time::Instant;
 
+mod tetris;
+
+pub type Rgb = [u8; 3];
+pub type FrameBuffer = [[Rgb; WIDTH]; HEIGHT];
+
+pub const BLACK: Rgb = [0_u8; 3];
+pub const WHITE: Rgb = [255_u8; 3];
+
 pub const FPS: usize = 180;
 pub const WIDTH: usize = 32;
 pub const HEIGHT: usize = 64;
@@ -31,22 +39,29 @@ pub struct Input {
     pub heart: bool,
 }
 
-#[derive(Debug)]
 pub struct App {
     start_time: Instant,
-    frame_buffer: Box<[[[u8; 3]; WIDTH]; HEIGHT]>,
+    frame_buffer: Box<FrameBuffer>,
+
+    last_frame_time: std::time::Instant,
+
+    tetris: tetris::Tetris,
 }
 impl Default for App {
     fn default() -> Self {
         Self {
             start_time: Instant::now(),
             frame_buffer: Box::new([[[0; 3]; WIDTH]; HEIGHT]),
+
+            last_frame_time: Instant::now(),
+
+            tetris: tetris::Tetris::default(),
         }
     }
 }
 
 impl App {
-    pub fn buffer(&self) -> &[[[u8; 3]; WIDTH]; HEIGHT] {
+    pub fn buffer(&self) -> &FrameBuffer {
         &self.frame_buffer
     }
     pub fn flattened_buffer(&self) -> &[u8] {
@@ -54,14 +69,41 @@ impl App {
     }
 
     pub fn update(&mut self, input: Input) {
+        let now = Instant::now();
+        // let delta = now - self.last_frame_time;
+        if ((now - self.start_time).as_secs_f64() * 30.0).floor()
+            != ((self.last_frame_time - self.start_time).as_secs_f64() * 30.0).floor()
+        {
+            self.tetris.step(input);
+        }
+        self.last_frame_time = now;
+
+        self.clear();
+        self.display_rainbow();
+        self.display_tetris();
+        self.display_input(input);
+    }
+
+    fn clear(&mut self) {
+        self.frame_buffer.as_flattened_mut().fill(BLACK);
+    }
+
+    fn display_tetris(&mut self) {
+        self.tetris.draw(&mut self.frame_buffer);
+    }
+
+    fn display_rainbow(&mut self) {
         let t = self.start_time.elapsed().as_secs_f64() / 2.0;
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
                 let color = colorous::RAINBOW
                     .eval_continuous(((x as f64 + y as f64 * 2.0) / 64.0 - t).rem_euclid(1.0));
-                self.frame_buffer[y][x] = color.as_array();
+                self.frame_buffer[y][x] = color.as_array().map(|x| x / 3);
             }
         }
+    }
+
+    fn display_input(&mut self, input: Input) {
         for (i, bit) in [
             input.up,
             input.down,
