@@ -20,7 +20,6 @@ rust_2018_idioms = "warn"
 unused_crate_dependencies = "warn"
 
 [workspace.lints.clippy]
-cargo = { level = "warn", priority = -1 }
 correctness = { level = "deny", priority = -1 }
 
 assigning_clones = "allow"

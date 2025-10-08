@@ -181,9 +181,10 @@ impl Game {
             return Err(HoldUsed);
         }
         self.hold_used = true;
-        let new_falling_piece =
-            std::mem::replace(&mut self.held_piece, Some(self.falling_piece.piece))
-                .unwrap_or_else(|| self.queue.pop_piece());
+        let new_falling_piece = self
+            .held_piece
+            .replace(self.falling_piece.piece)
+            .unwrap_or_else(|| self.queue.pop_piece());
         self.init_falling_piece(new_falling_piece);
         Ok(())
     }
