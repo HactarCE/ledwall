@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use ledwall::{App, FPS, HEIGHT, Input, WIDTH};
+use ledwall_os::{App, FPS, HEIGHT, Input, WIDTH};
 use macroquad::prelude::*;
 
 const SCALE_FACTOR: f32 = 10.0;
