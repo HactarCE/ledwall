@@ -1,3 +1,7 @@
+/// Game has ended.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct GameOver;
+
 /// Hold already used.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct HoldUsed;

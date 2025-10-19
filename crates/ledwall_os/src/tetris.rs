@@ -1,17 +1,24 @@
 use rand::SeedableRng;
-use tetris_logic::{Pos, Tetromino};
+use tetris_logic::{FrameInput, Pos, Tetromino};
 
-use crate::{FrameBuffer, Input, Rgb};
+use crate::{FPS, FrameBuffer, Input, Rgb};
 
 pub struct Tetris {
-    game: tetris_logic::Game,
+    game: tetris_logic::Game<u64>,
 }
 
 impl Default for Tetris {
     fn default() -> Self {
         Self {
             game: tetris_logic::Game::new(
-                tetris_logic::Config::default(),
+                tetris_logic::Config {
+                    das: Some(tetris_logic::Das {
+                        delay: FPS as u64 / 6,
+                        arr: FPS as u64 / 15,
+                    }),
+                    ..Default::default()
+                },
+                0,
                 Box::new(rand::rngs::SmallRng::from_os_rng()),
             ),
         }
@@ -20,26 +27,19 @@ impl Default for Tetris {
 
 impl Tetris {
     pub fn step(&mut self, input: Input) {
-        match (input.left, input.right) {
-            (true, false) => _ = self.game.input_move_left(),
-            (false, true) => _ = self.game.input_move_right(),
-            _ => (),
-        }
-        if input.down {
-            _ = self.game.input_soft_drop();
-        }
-        if input.up {
-            _ = self.game.input_hard_drop();
-        }
-        if input.a {
-            _ = self.game.input_rotate_cw();
-        }
-        if input.b {
-            _ = self.game.input_rotate_ccw();
-        }
-        if input.x {
-            _ = self.game.input_hold();
-        }
+        _ = self.game.step(
+            1,
+            FrameInput {
+                left: input.left,
+                right: input.right,
+                soft_drop: input.down,
+                hard_drop: input.up,
+                rot_cw: input.a || input.y,
+                rot_ccw: input.b,
+                rot_180: input.x,
+                hold: input.l || input.r || input.lt || input.rt,
+            },
+        );
     }
 
     pub fn draw(&mut self, frame_buffer: &mut FrameBuffer) {

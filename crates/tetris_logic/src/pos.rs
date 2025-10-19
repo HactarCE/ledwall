@@ -22,6 +22,9 @@ pub struct Offset {
 
 impl Offset {
     pub const ZERO: Self = Self::new(0, 0);
+    pub const LEFT: Self = Self::new(-1, 0);
+    pub const RIGHT: Self = Self::new(1, 0);
+    pub const DOWN: Self = Self::new(0, -1);
 
     pub const fn new(dx: i8, dy: i8) -> Self {
         Self { dx, dy }

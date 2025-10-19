@@ -12,4 +12,5 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-rand = { workspace = true }
+rand.workspace = true
+web-time = { version = "*", optional = true }

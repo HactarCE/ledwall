@@ -1,7 +1,7 @@
-use crate::Pos;
+use crate::{GameTime, Pos};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct Config {
+#[derive(Debug, Copy, Clone)]
+pub struct Config<Time: GameTime> {
     /// Width of the visible playfield.
     pub width: u8,
     /// Height of the visible playfield. Everywhere above this is the vanish
@@ -14,6 +14,11 @@ pub struct Config {
     /// Spawn position for blocks. Blocks move down immediately after appearing.
     pub spawn_pos: Pos,
 
+    /// DAS (delayed auto shift) behavior.
+    ///
+    /// If this is `None`, then there is no key repeat.
+    pub das: Option<Das<Time>>,
+
     /// Lock down behavior.
     pub lock_down: LockDown,
     /// Whether to decrease the lock down delay value per level when the gravity
@@ -21,7 +26,7 @@ pub struct Config {
     pub master_mode: bool,
 }
 
-impl Default for Config {
+impl<Time: GameTime> Default for Config<Time> {
     fn default() -> Self {
         Self {
             width: 10,
@@ -29,6 +34,8 @@ impl Default for Config {
             buffer_height: 20,
 
             spawn_pos: Pos::new(4, 20),
+
+            das: None,
 
             lock_down: LockDown::default(),
             master_mode: false,
@@ -56,4 +63,20 @@ pub enum LockDown {
     // ///
     // /// This is also called "step reset."
     // Classic,
+}
+
+/// [DAS](https://tetris.wiki/DAS) (delayed auto shift) behavior.
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Das<Time: GameTime> {
+    /// DAS delay.
+    ///
+    /// DAS delay refers to the delay between the player holding down the
+    /// direction and the auto-shift occurring. This may also be referred to as
+    /// DAS startup or simply DAS.
+    pub delay: Time::Duration,
+    /// Auto-repeat rate.
+    ///
+    /// Auto-repeat rate refers to the rate at which auto-shift inputs repeat,
+    /// but may also refer to the interval between repeats.
+    pub arr: Time::Duration,
 }

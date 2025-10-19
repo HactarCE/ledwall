@@ -7,31 +7,45 @@ use rand::RngCore;
 
 mod config;
 mod error;
+mod input;
+mod output;
 mod piece;
 mod playfield;
 mod pos;
 mod queue;
 mod rotation;
+mod time;
 
-pub use config::Config;
-pub use error::{Blocked, Error, HoldUsed};
+pub use config::{Config, Das, LockDown};
+pub use error::{Blocked, Error, GameOver, HoldUsed};
+pub use input::{FrameInput, InputState};
+pub use output::ActionResults;
 pub use piece::Tetromino;
 pub use playfield::Playfield;
 pub use pos::{Offset, Pos};
 pub use queue::Queue;
 pub use rotation::Rot;
+pub use time::GameTime;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-pub struct Game {
-    config: Config,
+#[cfg(feature = "web-time")]
+pub type DefaultTime = web_time::Instant;
+#[cfg(not(feature = "web-time"))]
+pub type DefaultTime = std::time::Instant;
+
+/// Tetris game state.
+pub struct Game<Time: GameTime = DefaultTime> {
+    config: Config<Time>,
     playfield: Playfield,
     queue: Queue,
 
-    /// Current frame index at 30 FPS.
-    frame: u64,
+    input_state: InputState<Time>,
 
-    falling_piece: FallingPiece,
+    /// Time of last frame.
+    frame: Time,
+
+    falling_piece: FallingPiece<Time>,
 
     held_piece: Option<Tetromino>,
     /// Whether the falling piece has already been held.
@@ -41,21 +55,23 @@ pub struct Game {
     game_over: bool,
 }
 
-impl Game {
-    pub fn new(config: Config, rng: Box<dyn RngCore>) -> Self {
+impl<Time: GameTime> Game<Time> {
+    pub fn new(config: Config<Time>, first_frame: Time, rng: Box<dyn RngCore>) -> Self {
         let mut ret = Self {
             config,
             playfield: Playfield::new(config.width, config.height + config.buffer_height),
             queue: Queue::new(rng),
 
-            frame: 0,
+            input_state: InputState::default(),
+
+            frame: first_frame,
 
             // dummy value; will be replaced
             falling_piece: FallingPiece {
                 piece: Tetromino::I,
                 rot: Rot::Init,
                 pos: Pos::default(),
-                frame_of_last_move: 0,
+                frame_of_last_move: first_frame,
             },
 
             held_piece: None,
@@ -84,7 +100,7 @@ impl Game {
         }
     }
 
-    fn set_falling_piece(&mut self, new_falling_piece: FallingPiece) -> Result<(), Blocked> {
+    fn set_falling_piece(&mut self, new_falling_piece: FallingPiece<Time>) -> Result<(), Blocked> {
         if self.playfield.can_place_piece(
             new_falling_piece.piece,
             new_falling_piece.rot,
@@ -108,7 +124,7 @@ impl Game {
         Ok(())
     }
 
-    pub fn falling_piece(&self) -> FallingPiece {
+    pub fn falling_piece(&self) -> FallingPiece<Time> {
         self.falling_piece
     }
 
@@ -128,7 +144,7 @@ impl Game {
     pub fn playfield(&self) -> &Playfield {
         &self.playfield
     }
-    pub fn config(&self) -> &Config {
+    pub fn config(&self) -> &Config<Time> {
         &self.config
     }
     pub fn queue(&mut self) -> &mut Queue {
@@ -137,46 +153,109 @@ impl Game {
     pub fn held_piece(&self) -> Option<Tetromino> {
         self.held_piece
     }
+
+    /// Advances the game to the next frame.
+    pub fn step(
+        &mut self,
+        delta: Time::Duration,
+        keys_down: FrameInput,
+    ) -> Result<ActionResults<Time>, GameOver> {
+        if self.game_over {
+            return Err(GameOver);
+        }
+
+        self.frame += delta;
+
+        // Update input state.
+        let mut actions_requested = self
+            .input_state
+            .update(self.config.das, self.frame, keys_down);
+
+        let FrameInput { left, right, .. } = actions_requested;
+        actions_requested.left &= !right;
+        actions_requested.right &= !left;
+
+        let mut locked_piece = None;
+
+        // // Move piece down automatically.
+        // self.config.master_mode
+
+        // Attempt actions.
+        let actions_completed = ActionResults {
+            left: actions_requested.left.then(|| self.move_left()),
+            right: actions_requested.right.then(|| self.move_right()),
+            soft_drop: actions_requested.soft_drop.then(|| self.soft_drop()),
+            hard_drop: actions_requested.hard_drop.then(|| {
+                self.hard_drop().map(|[old_falling, locked]| {
+                    locked_piece = Some(locked);
+                    old_falling
+                })
+            }),
+            rot_cw: actions_requested.rot_cw.then(|| self.rotate_cw()),
+            rot_ccw: actions_requested.rot_ccw.then(|| self.rotate_ccw()),
+            rot_180: actions_requested.rot_180.then(|| self.rotate_180()),
+            hold: actions_requested.hold.then(|| self.hold()),
+            locked_piece: None,
+        };
+
+        // Check for game-over.
+        if self.ghost_piece_pos().is_none() {
+            self.game_over = true;
+        }
+
+        Ok(actions_completed)
+    }
 }
 
-/// Input
-impl Game {
+/// Inputs
+impl<Time: GameTime> Game<Time> {
     /// Attempts to move the falling piece to the left.
-    pub fn input_move_left(&mut self) -> Result<(), Blocked> {
-        self.input_move(Offset { dx: -1, dy: 0 })
+    pub fn move_left(&mut self) -> Result<(), Blocked> {
+        self.input_move(Offset::LEFT)
     }
     /// Attempts to move the falling piece to the right.
-    pub fn input_move_right(&mut self) -> Result<(), Blocked> {
-        self.input_move(Offset { dx: 1, dy: 0 })
+    pub fn move_right(&mut self) -> Result<(), Blocked> {
+        self.input_move(Offset::RIGHT)
     }
-    /// Soft-drops the falling piece and returns whether it moved.
-    pub fn input_soft_drop(&mut self) -> Result<(), Blocked> {
-        self.input_move(Offset { dx: 0, dy: -1 })
+    /// Attempts to soft-drop the falling piece.
+    pub fn soft_drop(&mut self) -> Result<(), Blocked> {
+        self.input_move(Offset::DOWN)
     }
     /// Hard-drops the falling piece.
-    pub fn input_hard_drop(&mut self) -> Result<(), Blocked> {
+    ///
+    /// If successful, returns the old location of the falling piece and the
+    /// location of the locked piece.
+    pub fn hard_drop(&mut self) -> Result<[FallingPiece<Time>; 2], Blocked> {
+        let old_falling_piece = self.falling_piece;
         if let Some(pos) = self.ghost_piece_pos() {
             self.falling_piece.pos = pos;
         }
-        self.lock_falling_piece()
+        let locked_piece = self.falling_piece;
+        self.lock_falling_piece()?;
+        Ok([old_falling_piece, locked_piece])
     }
     /// Attempts to rotate the piece 90° clockwise.
-    pub fn input_rotate_cw(&mut self) -> Result<(), Blocked> {
+    ///
+    /// If successful, returns the old location of the falling piece.
+    pub fn rotate_cw(&mut self) -> Result<(), Blocked> {
         self.input_rotate(Rot::rot_cw)
     }
     /// Attempts to rotate the piece 180°.
-    pub fn input_rotate_180(&mut self) -> Result<(), Blocked> {
+    ///
+    /// If successful, returns the old location of the falling piece.
+    pub fn rotate_180(&mut self) -> Result<(), Blocked> {
         self.input_rotate(Rot::rot_180)
     }
     /// Attempts to rotate the piece 90° counterclockwise.
-    pub fn input_rotate_ccw(&mut self) -> Result<(), Blocked> {
+    ///
+    /// If successful, returns the old location of the falling piece.
+    pub fn rotate_ccw(&mut self) -> Result<(), Blocked> {
         self.input_rotate(Rot::rot_ccw)
     }
-    /// Swaps the falling piece with the held piece and returns whether it was
-    /// successful.
+    /// Attempts to swap the falling piece with the held piece.
     ///
     /// This fails only if hold was used on the last piece.
-    pub fn input_hold(&mut self) -> Result<(), HoldUsed> {
+    pub fn hold(&mut self) -> Result<(), HoldUsed> {
         if self.hold_used {
             return Err(HoldUsed);
         }
@@ -216,21 +295,12 @@ impl Game {
         }
         Err(Blocked)
     }
-
-    pub fn next_frame(&mut self) {
-        self.frame += 1;
-
-        // Check for
-        if self.ghost_piece_pos().is_none() {
-            self.game_over = true;
-        }
-    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct FallingPiece {
+pub struct FallingPiece<Time: GameTime = DefaultTime> {
     pub piece: Tetromino,
     pub rot: Rot,
     pub pos: Pos,
-    pub frame_of_last_move: u64,
+    pub frame_of_last_move: Time,
 }

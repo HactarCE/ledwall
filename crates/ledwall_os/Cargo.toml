@@ -12,6 +12,6 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-tetris_logic = { workspace = true }
-colorous = { workspace = true }
+tetris_logic.workspace = true
+colorous.workspace = true
 rand = { workspace = true, features = ["os_rng", "small_rng"] }

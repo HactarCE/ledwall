@@ -8,7 +8,7 @@ pub type FrameBuffer = [[Rgb; WIDTH]; HEIGHT];
 pub const BLACK: Rgb = [0_u8; 3];
 pub const WHITE: Rgb = [255_u8; 3];
 
-pub const FPS: usize = 180;
+pub const FPS: usize = 60;
 pub const WIDTH: usize = 32;
 pub const HEIGHT: usize = 64;
 
@@ -28,9 +28,9 @@ pub struct Input {
 
     // Shoulder buttons
     pub l: bool,
-    pub l2: bool,
     pub r: bool,
-    pub r2: bool,
+    pub lt: bool,
+    pub rt: bool,
 
     // Middle buttons
     pub plus: bool,
@@ -70,13 +70,8 @@ impl App {
 
     pub fn update(&mut self, input: Input) {
         let now = Instant::now();
-        // let delta = now - self.last_frame_time;
-        if ((now - self.start_time).as_secs_f64() * 30.0).floor()
-            != ((self.last_frame_time - self.start_time).as_secs_f64() * 30.0).floor()
-        {
-            self.tetris.step(input);
-        }
         self.last_frame_time = now;
+        self.tetris.step(input);
 
         self.clear();
         self.display_rainbow();

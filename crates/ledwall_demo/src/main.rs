@@ -45,10 +45,10 @@ async fn main() {
             down: is_key_down(KeyCode::Down) || is_key_down(KeyCode::S),
             left: is_key_down(KeyCode::Left) || is_key_down(KeyCode::A),
             right: is_key_down(KeyCode::Right) || is_key_down(KeyCode::D),
-            a: is_key_down(KeyCode::L),
-            b: is_key_down(KeyCode::Comma),
-            x: is_key_down(KeyCode::K),
-            y: is_key_down(KeyCode::M),
+            a: is_key_down(KeyCode::K),
+            b: is_key_down(KeyCode::J),
+            x: is_key_down(KeyCode::L),
+            r: is_key_down(KeyCode::Semicolon),
             ..Default::default()
         };
 
