@@ -1,26 +1,43 @@
-use rpi_led_matrix::*;
+use gilrs::Gilrs;
+use ledwall_os::{App, FPS, HEIGHT, Input, WIDTH};
+use rpi_led_panel::*;
 
 // 0..=100
-const BRIGHTNESS: usize = 10;
+const BRIGHTNESS: u8 = 100;
 
 fn main() {
-    let mut matrix_options = LedMatrixOptions::new();
-    matrix_options.set_brightness(BRIGHTNESS);
-    matrix_options.set_hardware_mapping("adafruit-hat");
-    matrix_options.set_limit_refresh(180);
-    matrix_options.set_cols(ledwall::WIDTH as u32);
-    matrix_options.set_rows(ledwall::HEIGHT as u32);
+    let mut config = RGBMatrixConfig::default();
+    config.led_brightness = BRIGHTNESS;
+    config.hardware_mapping = HardwareMapping::adafruit_hat_pwm();
+    config.cols = ledwall_os::HEIGHT;
+    config.rows = ledwall_os::WIDTH;
+    let (mut matrix, mut canvas) = RGBMatrix::new(config, 0).expect("error initializing matrix");
 
-    let runtime_options = LedRuntimeOptions::new();
+    let gilrs = Gilrs::new().expect("error initializing gamepad");
+    dbg!(gilrs.gamepads().count());
 
-    let matrix = LedMatrix::new(Some(matrix_options), Some(runtime_options)).unwrap();
-    let mut canvas = matrix.offscreen_canvas();
-    for red in (0..255).step_by(16) {
-        for green in (0..255).step_by(16) {
-            for blue in (0..255).step_by(16) {
-                canvas.fill(&LedColor { red, green, blue });
-                canvas = matrix.swap(canvas);
+    let mut app = App::default();
+
+    loop {
+        for g in gilrs.gamepads() {
+            dbg!(g.0);
+            dbg!(g.1);
+        }
+
+        // Take input
+        let input = Input::default();
+
+        // Update app
+        app.update(input);
+
+        // Update canvas
+        for (y, row) in app.buffer().iter().enumerate() {
+            for (x, &[r, g, b]) in row.iter().enumerate() {
+                canvas.set_pixel(y, WIDTH - 1 - x, r, g, b);
             }
         }
+
+        // Update display and wait for next frame
+        canvas = matrix.update_on_vsync(canvas);
     }
 }

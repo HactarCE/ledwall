@@ -12,5 +12,6 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-ledwall_os = { workspace = true }
-rpi-led-matrix = { workspace = true }
+gilrs.workspace = true
+ledwall_os.workspace = true
+rpi-led-panel.workspace = true
