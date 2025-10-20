@@ -167,13 +167,9 @@ impl<Time: GameTime> Game<Time> {
         self.frame += delta;
 
         // Update input state.
-        let mut actions_requested = self
+        let actions_requested = self
             .input_state
             .update(self.config.das, self.frame, keys_down);
-
-        let FrameInput { left, right, .. } = actions_requested;
-        actions_requested.left &= !right;
-        actions_requested.right &= !left;
 
         let mut locked_piece = None;
 

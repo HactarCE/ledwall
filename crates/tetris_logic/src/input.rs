@@ -51,8 +51,8 @@ impl<Time: GameTime> InputState<Time> {
         let new = self.keys_down;
 
         FrameInput {
-            left: self.left.update(das, now, new.left),
-            right: self.right.update(das, now, new.right),
+            left: self.left.update(das, now, new.left && !new.right),
+            right: self.right.update(das, now, new.right && !new.left),
             soft_drop: self.soft_drop.update(das, now, new.soft_drop),
             hard_drop: new.hard_drop && !old.hard_drop,
             rot_cw: new.rot_cw && !old.rot_cw,
@@ -75,7 +75,6 @@ impl<Time: GameTime> DasState<Time> {
     /// Updates the input state and returns whether to perform the action.
     pub fn update(&mut self, das: Option<Das<Time>>, now: Time, is_down: bool) -> bool {
         if is_down {
-            dbg!(&self, now);
             match self {
                 DasState::Released => {
                     *self = DasState::Pressed {
