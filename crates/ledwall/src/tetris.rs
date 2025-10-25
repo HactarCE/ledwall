@@ -1,7 +1,10 @@
 use rand::SeedableRng;
 use tetris_logic::{FrameInput, Pos, Tetromino};
 
-use crate::{FPS, FrameBuffer, Input, Rgb};
+use crate::{BLACK, FPS, FrameBuffer, Input, Rgb};
+
+const BORDER: Rgb = rgb(0x666666);
+const BACKGROUND: Rgb = BLACK;
 
 pub struct Tetris {
     game: tetris_logic::Game<u64>,
@@ -53,13 +56,15 @@ impl Tetris {
                 draw_big_block(frame_buffer, [0, 0], pos, color);
             }
         }
+
+        // Draw border
         let w = self.game.config().width as i8 * 2;
         let h = self.game.config().height as i8 * 2;
         for y in 0..=h {
-            draw_small_block(frame_buffer, [0, 0], Pos { x: w, y }, crate::BLACK);
+            draw_small_block(frame_buffer, [0, 0], Pos { x: w, y }, BORDER);
         }
         for x in 0..w {
-            draw_small_block(frame_buffer, [0, 0], Pos { x, y: h }, crate::BLACK);
+            draw_small_block(frame_buffer, [0, 0], Pos { x, y: h }, BORDER);
         }
 
         let falling_piece = self.game.falling_piece();
@@ -144,7 +149,7 @@ fn draw_small_block(
 
 fn block_color(piece: Option<Tetromino>) -> Rgb {
     match piece {
-        None => rgb(0x333333),
+        None => BACKGROUND,
         Some(Tetromino::I) => rgb(0x00FFFF),
         Some(Tetromino::J) => rgb(0x0000FF),
         Some(Tetromino::L) => rgb(0xFF9900),
@@ -155,13 +160,13 @@ fn block_color(piece: Option<Tetromino>) -> Rgb {
     }
 }
 
-pub fn rgb(hex: u32) -> Rgb {
+pub const fn rgb(hex: u32) -> Rgb {
     let r = (hex >> 16) as u8;
     let g = (hex >> 8) as u8;
     let b = hex as u8;
     [r, g, b]
 }
 
-pub fn dim([r, g, b]: Rgb) -> Rgb {
+pub const fn dim([r, g, b]: Rgb) -> Rgb {
     [r / 2, g / 2, b / 2]
 }

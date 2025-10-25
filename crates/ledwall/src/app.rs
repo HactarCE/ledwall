@@ -85,7 +85,7 @@ impl App {
         self.tetris.step(input);
 
         self.clear();
-        self.display_rainbow();
+        // self.display_rainbow();
         if let Some(img) = self.image_data.take() {
             self.display_image(&img);
             self.image_data = Some(img);
