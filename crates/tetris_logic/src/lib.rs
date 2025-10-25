@@ -51,6 +51,8 @@ pub struct Game<Time: GameTime = DefaultTime> {
     /// Whether the falling piece has already been held.
     hold_used: bool,
 
+    rows_to_clear: Vec<i8>,
+
     /// Whether the game has ended.
     game_over: bool,
 }
@@ -76,6 +78,8 @@ impl<Time: GameTime> Game<Time> {
 
             held_piece: None,
             hold_used: false,
+
+            rows_to_clear: vec![0],
 
             game_over: false,
         };
@@ -164,6 +168,10 @@ impl<Time: GameTime> Game<Time> {
             return Err(GameOver);
         }
 
+        for row in self.rows_to_clear.drain(..).rev() {
+            self.playfield.delete_row(row);
+        }
+
         self.frame += delta;
 
         // Update input state.
@@ -175,6 +183,8 @@ impl<Time: GameTime> Game<Time> {
 
         // // Move piece down automatically.
         // self.config.master_mode
+
+        self.rows_to_clear = self.playfield.full_rows().collect();
 
         // Attempt actions.
         let actions_completed = ActionResults {
@@ -192,6 +202,7 @@ impl<Time: GameTime> Game<Time> {
             rot_180: actions_requested.rot_180.then(|| self.rotate_180()),
             hold: actions_requested.hold.then(|| self.hold()),
             locked_piece: None,
+            rows_cleared: Some(self.rows_to_clear.clone()),
         };
 
         // Check for game-over.

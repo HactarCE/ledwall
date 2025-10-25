@@ -1,9 +1,9 @@
 use crate::{Blocked, FallingPiece, GameTime, HoldUsed};
 
-/// Which actions succeeded on a frame.
+/// Result of simulating a frame, including which actions succeeded on a frame.
 ///
 /// This can be used, e.g., to play sound effects.
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct ActionResults<Time: GameTime> {
     /// User attempt to move the falling piece to the left (auto-repeats).
     pub left: Option<Result<(), Blocked>>,
@@ -26,4 +26,10 @@ pub struct ActionResults<Time: GameTime> {
 
     /// Piece that was just locked into place.
     pub locked_piece: Option<FallingPiece<Time>>,
+
+    /// Y coordinates of the rows cleared on this frame.
+    ///
+    /// To display an animation, stop calling `step()` while displaying the
+    /// animation.
+    pub rows_cleared: Option<Vec<i8>>,
 }

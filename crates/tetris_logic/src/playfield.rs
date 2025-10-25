@@ -57,4 +57,16 @@ impl Playfield {
     pub fn height(&self) -> u8 {
         self.height
     }
+
+    pub fn full_rows(&self) -> impl Iterator<Item = i8> {
+        (0..self.height as i8).filter(|&y| {
+            (0..self.width as i8).all(|x| matches!(self.get(Pos { x, y }), Some(Some(_))))
+        })
+    }
+
+    pub fn delete_row(&mut self, row: i8) {
+        let i = self.pos_to_index(Pos::new(0, row)).unwrap();
+        self.blocks[i..i + self.width as usize].fill(None);
+        self.blocks[i..].rotate_left(self.width as usize);
+    }
 }
