@@ -3,6 +3,7 @@ members = [
     "crates/ledwall_demo",
     "crates/ledwall_rpi",
     "crates/ledwall_os",
+    "crates/preprocess_image",
     "crates/tetris_logic",
 ]
 resolver = "3"

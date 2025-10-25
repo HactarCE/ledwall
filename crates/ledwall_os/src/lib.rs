@@ -46,6 +46,8 @@ pub struct App {
     last_frame_time: std::time::Instant,
 
     tetris: tetris::Tetris,
+
+    image_data: Option<Vec<u8>>,
 }
 impl Default for App {
     fn default() -> Self {
@@ -56,6 +58,8 @@ impl Default for App {
             last_frame_time: Instant::now(),
 
             tetris: tetris::Tetris::default(),
+
+            image_data: None,
         }
     }
 }
@@ -68,6 +72,10 @@ impl App {
         self.frame_buffer.as_flattened().as_flattened()
     }
 
+    pub fn set_image(&mut self, image_data: Option<Vec<u8>>) {
+        self.image_data = image_data;
+    }
+
     pub fn update(&mut self, input: Input) {
         let now = Instant::now();
         self.last_frame_time = now;
@@ -75,8 +83,13 @@ impl App {
 
         self.clear();
         self.display_rainbow();
-        self.display_tetris();
-        self.display_input(input);
+        if let Some(img) = self.image_data.take() {
+            self.display_image(&img);
+            self.image_data = Some(img);
+        } else {
+            self.display_tetris();
+            self.display_input(input);
+        }
     }
 
     fn clear(&mut self) {
@@ -113,6 +126,18 @@ impl App {
         .enumerate()
         {
             self.frame_buffer[0][i] = [if bit { 255 } else { 0 }; 3];
+        }
+    }
+
+    fn display_image(&mut self, image_data: &[u8]) {
+        for (&[r, g, b, a], out) in std::iter::zip(
+            image_data.as_chunks().0,
+            self.frame_buffer.as_flattened_mut(),
+        ) {
+            let a = a as f32 / 255.0;
+            let [r2, g2, b2] = *out;
+            *out = [(r, r2), (g, g2), (b, b2)]
+                .map(|(x1, x2)| (x1 as f32 * a + x2 as f32 * (1.0 - a)) as u8);
         }
     }
 }

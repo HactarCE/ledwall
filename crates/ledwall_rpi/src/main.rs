@@ -18,6 +18,10 @@ fn main() {
 
     let mut app = App::default();
 
+    if let Some(arg) = std::env::args().nth(1) {
+        app.set_image(Some(std::fs::read(arg).unwrap()));
+    }
+
     loop {
         for g in gilrs.gamepads() {
             dbg!(g.0);
