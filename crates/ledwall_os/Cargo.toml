@@ -13,5 +13,9 @@ workspace = true
 
 [dependencies]
 tetris_logic.workspace = true
-colorous.workspace = true
+colorous = "1.0.16"
+gilrs = { workspace = true, optional = true }
 rand = { workspace = true, features = ["os_rng", "small_rng"] }
+
+[features]
+default = ["gilrs"]

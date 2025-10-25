@@ -45,6 +45,9 @@ pub struct App {
 
     last_frame_time: std::time::Instant,
 
+    #[cfg(feature = "gilrs")]
+    gilrs: gilrs::Gilrs,
+
     tetris: tetris::Tetris,
 
     image_data: Option<Vec<u8>>,
@@ -56,6 +59,9 @@ impl Default for App {
             frame_buffer: Box::new([[[0; 3]; WIDTH]; HEIGHT]),
 
             last_frame_time: Instant::now(),
+
+            #[cfg(feature = "gilrs")]
+            gilrs: gilrs::Gilrs::new().expect("error initializing gamepad"),
 
             tetris: tetris::Tetris::default(),
 
@@ -74,6 +80,40 @@ impl App {
 
     pub fn set_image(&mut self, image_data: Option<Vec<u8>>) {
         self.image_data = image_data;
+    }
+
+    #[cfg(feature = "gilrs")]
+    pub fn read_gilrs_input(&mut self) -> Input {
+        use gilrs::{Axis, Button};
+
+        while self.gilrs.next_event().is_some() {}
+
+        let Some((_id, gamepad)) = self.gilrs.gamepads().next() else {
+            return Input::default();
+        };
+
+        let x = gamepad.axis_data(Axis::LeftStickX);
+        let y = gamepad.axis_data(Axis::LeftStickY);
+        let is_button_pressed = |b| gamepad.button_data(b).is_some_and(|d| d.is_pressed());
+
+        Input {
+            up: y.is_some_and(|y| y.value() > 0.5),
+            down: y.is_some_and(|y| y.value() < -0.5),
+            left: x.is_some_and(|x| x.value() < -0.5),
+            right: x.is_some_and(|x| x.value() > 0.5),
+            a: is_button_pressed(Button::East),
+            b: is_button_pressed(Button::South),
+            x: is_button_pressed(Button::North),
+            y: is_button_pressed(Button::West),
+            l: is_button_pressed(Button::LeftTrigger),
+            r: is_button_pressed(Button::RightTrigger),
+            lt: is_button_pressed(Button::LeftTrigger2),
+            rt: is_button_pressed(Button::RightTrigger2),
+            plus: is_button_pressed(Button::Select),
+            minus: is_button_pressed(Button::Start),
+            star: false, // can't access
+            heart: is_button_pressed(Button::Mode),
+        }
     }
 
     pub fn update(&mut self, input: Input) {

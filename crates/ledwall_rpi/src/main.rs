@@ -1,4 +1,5 @@
-use gilrs::Gilrs;
+use std::time::Duration;
+
 use ledwall_os::{App, FPS, HEIGHT, Input, WIDTH};
 use rpi_led_panel::*;
 
@@ -13,9 +14,6 @@ fn main() {
     config.rows = ledwall_os::WIDTH;
     let (mut matrix, mut canvas) = RGBMatrix::new(config, 0).expect("error initializing matrix");
 
-    let gilrs = Gilrs::new().expect("error initializing gamepad");
-    dbg!(gilrs.gamepads().count());
-
     let mut app = App::default();
 
     if let Some(arg) = std::env::args().nth(1) {
@@ -23,13 +21,8 @@ fn main() {
     }
 
     loop {
-        for g in gilrs.gamepads() {
-            dbg!(g.0);
-            dbg!(g.1);
-        }
-
         // Take input
-        let input = Input::default();
+        let input = app.read_gilrs_input();
 
         // Update app
         app.update(input);

@@ -12,6 +12,6 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-gilrs.workspace = true
 ledwall_os.workspace = true
-rpi-led-panel.workspace = true
+gilrs.workspace = true
+rpi-led-panel = "0.7.0"

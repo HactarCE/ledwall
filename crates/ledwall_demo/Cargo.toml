@@ -14,4 +14,4 @@ workspace = true
 
 [dependencies]
 ledwall_os.workspace = true
-macroquad.workspace = true
+macroquad = "0.4.14"

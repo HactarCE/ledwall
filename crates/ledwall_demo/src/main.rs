@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use ledwall_os::{App, FPS, HEIGHT, Input, WIDTH};
+use ledwall_os::{App, FPS, HEIGHT, WIDTH};
 use macroquad::prelude::*;
 
 const SCALE_FACTOR: f32 = 10.0;
@@ -40,17 +40,15 @@ async fn main() {
         }
 
         // Take input
-        let input = Input {
-            up: is_key_down(KeyCode::Up) || is_key_down(KeyCode::W),
-            down: is_key_down(KeyCode::Down) || is_key_down(KeyCode::S),
-            left: is_key_down(KeyCode::Left) || is_key_down(KeyCode::A),
-            right: is_key_down(KeyCode::Right) || is_key_down(KeyCode::D),
-            a: is_key_down(KeyCode::K),
-            b: is_key_down(KeyCode::J),
-            x: is_key_down(KeyCode::L),
-            r: is_key_down(KeyCode::Semicolon),
-            ..Default::default()
-        };
+        let mut input = app.read_gilrs_input();
+        input.up |= is_key_down(KeyCode::Up) || is_key_down(KeyCode::W);
+        input.down |= is_key_down(KeyCode::Down) || is_key_down(KeyCode::S);
+        input.left |= is_key_down(KeyCode::Left) || is_key_down(KeyCode::A);
+        input.right |= is_key_down(KeyCode::Right) || is_key_down(KeyCode::D);
+        input.a |= is_key_down(KeyCode::K);
+        input.b |= is_key_down(KeyCode::J);
+        input.x |= is_key_down(KeyCode::L);
+        input.r |= is_key_down(KeyCode::Semicolon);
 
         // Update app
         app.update(input);
