@@ -33,7 +33,7 @@ fn main() {
         // Update canvas
         for (y, row) in app.buffer().iter().enumerate() {
             for (x, &[r, g, b]) in row.iter().enumerate() {
-                canvas.set_pixel(y, WIDTH - 1 - x, r, g, b);
+                canvas.set_pixel(HEIGHT - 1 - y, x, r, g, b);
             }
         }
 
