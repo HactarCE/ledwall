@@ -1,43 +1,6 @@
 use std::time::Instant;
 
-mod tetris;
-
-pub type Rgb = [u8; 3];
-pub type FrameBuffer = [[Rgb; WIDTH]; HEIGHT];
-
-pub const BLACK: Rgb = [0_u8; 3];
-pub const WHITE: Rgb = [255_u8; 3];
-
-pub const FPS: usize = 60;
-pub const WIDTH: usize = 32;
-pub const HEIGHT: usize = 64;
-
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct Input {
-    // D pad
-    pub up: bool,
-    pub down: bool,
-    pub left: bool,
-    pub right: bool,
-
-    // Thumb buttons
-    pub a: bool,
-    pub b: bool,
-    pub x: bool,
-    pub y: bool,
-
-    // Shoulder buttons
-    pub l: bool,
-    pub r: bool,
-    pub lt: bool,
-    pub rt: bool,
-
-    // Middle buttons
-    pub plus: bool,
-    pub minus: bool,
-    pub star: bool,
-    pub heart: bool,
-}
+use crate::{BLACK, FrameBuffer, HEIGHT, Input, WIDTH, tetris};
 
 pub struct App {
     start_time: Instant,

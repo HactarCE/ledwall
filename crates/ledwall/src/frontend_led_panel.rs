@@ -1,17 +1,16 @@
-use std::time::Duration;
-
-use ledwall_os::{App, FPS, HEIGHT, Input, WIDTH};
 use rpi_led_panel::*;
+
+use crate::{App, HEIGHT, WIDTH};
 
 // 0..=100
 const BRIGHTNESS: u8 = 100;
 
-fn main() {
+pub fn main() {
     let mut config = RGBMatrixConfig::default();
     config.led_brightness = BRIGHTNESS;
     config.hardware_mapping = HardwareMapping::adafruit_hat_pwm();
-    config.cols = ledwall_os::HEIGHT;
-    config.rows = ledwall_os::WIDTH;
+    config.cols = HEIGHT;
+    config.rows = WIDTH;
     let (mut matrix, mut canvas) = RGBMatrix::new(config, 0).expect("error initializing matrix");
 
     let mut app = App::default();

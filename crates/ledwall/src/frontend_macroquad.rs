@@ -1,7 +1,8 @@
 use std::time::{Duration, Instant};
 
-use ledwall_os::{App, FPS, HEIGHT, WIDTH};
 use macroquad::prelude::*;
+
+use crate::{App, FPS, HEIGHT, WIDTH};
 
 const SCALE_FACTOR: f32 = 10.0;
 const PADDING: f32 = 25.0;
@@ -11,7 +12,7 @@ const TOP_PADDING: f32 = PADDING;
 const BOTTOM_PADDING: f32 = 30.0 + PADDING;
 
 #[macroquad::main("ledwall")]
-async fn main() {
+pub async fn main() {
     request_new_screen_size(
         32.0 * SCALE_FACTOR + X_PADDING * 2.0,
         64.0 * SCALE_FACTOR + TOP_PADDING + BOTTOM_PADDING,
