@@ -13,8 +13,8 @@ impl Default for Tetris {
             game: tetris_logic::Game::new(
                 tetris_logic::Config {
                     das: Some(tetris_logic::Das {
-                        delay: FPS as u64 / 6,
-                        arr: FPS as u64 / 15,
+                        delay: FPS as u64 / 3,
+                        arr: FPS as u64 / 10,
                     }),
                     ..Default::default()
                 },
