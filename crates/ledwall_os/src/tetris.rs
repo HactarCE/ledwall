@@ -53,6 +53,14 @@ impl Tetris {
                 draw_big_block(frame_buffer, [0, 0], pos, color);
             }
         }
+        let w = self.game.config().width as i8 * 2;
+        let h = self.game.config().height as i8 * 2;
+        for y in 0..=h {
+            draw_small_block(frame_buffer, [0, 0], Pos { x: w, y }, crate::BLACK);
+        }
+        for x in 0..w {
+            draw_small_block(frame_buffer, [0, 0], Pos { x, y: h }, crate::BLACK);
+        }
 
         let falling_piece = self.game.falling_piece();
         let falling_color = block_color(Some(falling_piece.piece));
