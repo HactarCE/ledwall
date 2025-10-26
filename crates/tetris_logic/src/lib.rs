@@ -19,7 +19,7 @@ mod time;
 pub use config::{Config, Das, LockDown};
 pub use error::{Blocked, Error, GameOver, HoldUsed};
 pub use input::{FrameInput, InputState};
-pub use output::ActionResults;
+pub use output::FrameOutput;
 pub use piece::Tetromino;
 pub use playfield::Playfield;
 pub use pos::{Offset, Pos};
@@ -163,7 +163,7 @@ impl<Time: GameTime> Game<Time> {
         &mut self,
         delta: Time::Duration,
         keys_down: FrameInput,
-    ) -> Result<ActionResults<Time>, GameOver> {
+    ) -> Result<FrameOutput<Time>, GameOver> {
         if self.game_over {
             return Err(GameOver);
         }
@@ -187,7 +187,7 @@ impl<Time: GameTime> Game<Time> {
         self.rows_to_clear = self.playfield.full_rows().collect();
 
         // Attempt actions.
-        let actions_completed = ActionResults {
+        let actions_completed = FrameOutput {
             left: actions_requested.left.then(|| self.move_left()),
             right: actions_requested.right.then(|| self.move_right()),
             soft_drop: actions_requested.soft_drop.then(|| self.soft_drop()),
@@ -202,7 +202,7 @@ impl<Time: GameTime> Game<Time> {
             rot_180: actions_requested.rot_180.then(|| self.rotate_180()),
             hold: actions_requested.hold.then(|| self.hold()),
             locked_piece: None,
-            rows_cleared: Some(self.rows_to_clear.clone()),
+            rows_cleared: Some(self.rows_to_clear.clone()).filter(|list| !list.is_empty()),
         };
 
         // Check for game-over.

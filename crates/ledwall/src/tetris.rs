@@ -6,8 +6,11 @@ use crate::{BLACK, FPS, FrameBuffer, Input, Rgb};
 const BORDER: Rgb = rgb(0x666666);
 const BACKGROUND: Rgb = BLACK;
 
+const ROW_CLEAR_TIME: u32 = 30;
+
 pub struct Tetris {
     game: tetris_logic::Game<u64>,
+    row_clear_anim: Option<(Vec<i8>, u32)>,
 }
 
 impl Default for Tetris {
@@ -24,13 +27,23 @@ impl Default for Tetris {
                 0,
                 Box::new(rand::rngs::SmallRng::from_os_rng()),
             ),
+            row_clear_anim: None,
         }
     }
 }
 
 impl Tetris {
     pub fn step(&mut self, input: Input) {
-        _ = self.game.step(
+        if let Some((_rows_cleared, frame)) = &mut self.row_clear_anim {
+            *frame += 1;
+            if *frame <= ROW_CLEAR_TIME {
+                return;
+            } else {
+                self.row_clear_anim = None;
+            }
+        }
+
+        let result = self.game.step(
             1,
             FrameInput {
                 left: input.left,
@@ -43,6 +56,12 @@ impl Tetris {
                 hold: input.l || input.r || input.lt || input.rt,
             },
         );
+
+        if let Ok(output) = &result {
+            if let Some(rows_cleared) = &output.rows_cleared {
+                self.row_clear_anim = Some((rows_cleared.clone(), 0));
+            }
+        }
     }
 
     pub fn draw(&mut self, frame_buffer: &mut FrameBuffer) {
@@ -116,6 +135,43 @@ impl Tetris {
                 draw_big_block(frame_buffer, [22, 0], Pos::new(1, 1) + offset, color);
             }
         }
+
+        // Draw row clear animation
+        let playfield = self.game.playfield();
+        if let Some((rows_cleared, frame)) = &self.row_clear_anim {
+            let progress = *frame as f32 / ROW_CLEAR_TIME as f32;
+            for x in 0..playfield.width() * 2 {
+                const T1_START: f32 = 0.0;
+                const T1_LEN: f32 = 0.0;
+                const T1_END: f32 = T1_START + T1_LEN;
+                const T2_START: f32 = T1_END;
+                const T2_LEN: f32 = 1.0;
+                const T2_END: f32 = T2_START + T2_LEN;
+                const TOTAL_LEN: f32 = T2_END + 0.5;
+
+                let t = progress * (1.0 + TOTAL_LEN) - x as f32 / (playfield.width() as f32 * 2.0);
+                for y in rows_cleared {
+                    for dy in 0..2 {
+                        let h = frame_buffer.len();
+                        let [r, g, b] =
+                            &mut frame_buffer[h - 1 - (*y as usize * 2 + dy)][x as usize];
+                        let t1 = (t - T1_START) / T1_LEN;
+                        let t2 = (t - T2_START) / T2_LEN;
+
+                        if t2 >= 0.0 {
+                            let q = t2.clamp(0.0, 1.0);
+                            *r = ((1.0 - q) * (*r as f32 / 2.0 + 0.5)).clamp(0.0, 255.0) as u8;
+                            *g = ((1.0 - q) * (*g as f32 / 2.0 + 0.5)).clamp(0.0, 255.0) as u8;
+                            *b = ((1.0 - q) * (*b as f32 / 2.0 + 0.5)).clamp(0.0, 255.0) as u8;
+                        } else if t1 >= 0.0 {
+                            // *r = (*r as f32 * (1.0 - t1) + t1 * 255.0).clamp(0.0, 255.0) as u8;
+                            // *g = (*g as f32 * (1.0 - t1) + t1 * 255.0).clamp(0.0, 255.0) as u8;
+                            // *b = (*b as f32 * (1.0 - t1) + t1 * 255.0).clamp(0.0, 255.0) as u8;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -168,5 +224,5 @@ pub const fn rgb(hex: u32) -> Rgb {
 }
 
 pub const fn dim([r, g, b]: Rgb) -> Rgb {
-    [r / 2, g / 2, b / 2]
+    [r / 4, g / 4, b / 4]
 }

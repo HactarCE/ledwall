@@ -3,7 +3,7 @@ use rpi_led_panel::*;
 use crate::{App, HEIGHT, WIDTH};
 
 // 0..=100
-const BRIGHTNESS: u8 = 100;
+const BRIGHTNESS: u8 = 60;
 
 pub fn main() {
     let mut config = RGBMatrixConfig::default();

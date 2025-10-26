@@ -4,7 +4,7 @@ use crate::{Blocked, FallingPiece, GameTime, HoldUsed};
 ///
 /// This can be used, e.g., to play sound effects.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
-pub struct ActionResults<Time: GameTime> {
+pub struct FrameOutput<Time: GameTime> {
     /// User attempt to move the falling piece to the left (auto-repeats).
     pub left: Option<Result<(), Blocked>>,
     /// User attempt to move the falling piece to the right (auto-repeats).
