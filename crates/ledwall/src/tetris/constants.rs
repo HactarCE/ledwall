@@ -8,7 +8,7 @@ pub mod coordinates {
     pub const PLAYFIELD: Transform = Transform::big([1, 23], [10, 20]);
 
     pub const HOLD_ON_TOP: bool = false;
-    pub const HOLD_Y: i32 = if HOLD_ON_TOP { 23 } else { 50 };
+    pub const HOLD_Y: i32 = if HOLD_ON_TOP { 23 } else { 55 };
     pub const NEXT_PIECE_Y: i32 = if HOLD_ON_TOP { 35 } else { 23 };
 
     pub const NEXT_PIECE: Transform = Transform::big([23, NEXT_PIECE_Y], [4, 4]);
@@ -51,7 +51,7 @@ pub mod animations {
     }
 
     pub mod lock {
-        // must be shorter than `clear`
+        // should be shorter than `clear`
         pub const DURATION: f32 = 0.5; // seconds
     }
 
