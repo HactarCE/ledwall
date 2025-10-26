@@ -201,7 +201,7 @@ impl<Time: GameTime> Game<Time> {
             rot_ccw: actions_requested.rot_ccw.then(|| self.rotate_ccw()),
             rot_180: actions_requested.rot_180.then(|| self.rotate_180()),
             hold: actions_requested.hold.then(|| self.hold()),
-            locked_piece: None,
+            locked_piece,
             rows_cleared: Some(self.rows_to_clear.clone()).filter(|list| !list.is_empty()),
         };
 
@@ -310,4 +310,10 @@ pub struct FallingPiece<Time: GameTime = DefaultTime> {
     pub rot: Rot,
     pub pos: Pos,
     pub frame_of_last_move: Time,
+}
+
+impl<Time: GameTime> FallingPiece<Time> {
+    pub fn coordinates(&self) -> [Pos; 4] {
+        self.piece.coordinates_at(self.rot, self.pos)
+    }
 }

@@ -1,5 +1,5 @@
 use rand::SeedableRng;
-use tetris_logic::{FrameInput, Pos, Tetromino};
+use tetris_logic::{FallingPiece, FrameInput, Pos, Tetromino};
 
 use crate::{BLACK, FPS, FrameBuffer, Input, Rgb};
 
@@ -7,10 +7,12 @@ const BORDER: Rgb = rgb(0x666666);
 const BACKGROUND: Rgb = BLACK;
 
 const ROW_CLEAR_TIME: u32 = 30;
+const HARD_DROP_TIME: u32 = 30;
 
 pub struct Tetris {
     game: tetris_logic::Game<u64>,
     row_clear_anim: Option<(Vec<i8>, u32)>,
+    hard_drop_anim: Option<(FallingPiece<u64>, u32)>,
 }
 
 impl Default for Tetris {
@@ -28,12 +30,20 @@ impl Default for Tetris {
                 Box::new(rand::rngs::SmallRng::from_os_rng()),
             ),
             row_clear_anim: None,
+            hard_drop_anim: None,
         }
     }
 }
 
 impl Tetris {
     pub fn step(&mut self, input: Input) {
+        if let Some((_piece, frame)) = &mut self.hard_drop_anim {
+            *frame += 1;
+            if *frame > HARD_DROP_TIME {
+                self.hard_drop_anim = None;
+            }
+        }
+
         if let Some((_rows_cleared, frame)) = &mut self.row_clear_anim {
             *frame += 1;
             if *frame <= ROW_CLEAR_TIME {
@@ -60,6 +70,11 @@ impl Tetris {
         if let Ok(output) = &result {
             if let Some(rows_cleared) = &output.rows_cleared {
                 self.row_clear_anim = Some((rows_cleared.clone(), 0));
+            }
+            if output.hard_drop.is_some()
+                && let Some(locked_piece) = output.locked_piece
+            {
+                self.hard_drop_anim = Some((locked_piece, 0));
             }
         }
     }
@@ -136,8 +151,9 @@ impl Tetris {
             }
         }
 
-        // Draw row clear animation
         let playfield = self.game.playfield();
+
+        // Draw row clear animation
         if let Some((rows_cleared, frame)) = &self.row_clear_anim {
             let progress = *frame as f32 / ROW_CLEAR_TIME as f32;
             for x in 0..playfield.width() * 2 {
@@ -168,6 +184,47 @@ impl Tetris {
                             // *g = (*g as f32 * (1.0 - t1) + t1 * 255.0).clamp(0.0, 255.0) as u8;
                             // *b = (*b as f32 * (1.0 - t1) + t1 * 255.0).clamp(0.0, 255.0) as u8;
                         }
+                    }
+                }
+            }
+        }
+
+        // Draw hard drop animation
+        if let Some((end_piece, frame)) = &self.hard_drop_anim {
+            const MAX_BRIGHTNESS: f32 = 0.5;
+            const TINT: f32 = 1.0;
+
+            let mut start_positions: Vec<Pos> = vec![];
+            for pos in end_piece.coordinates() {
+                if let Some(p) = start_positions.iter_mut().find(|p| p.x == pos.x) {
+                    p.y = std::cmp::max(pos.y, p.y);
+                } else {
+                    start_positions.push(pos);
+                }
+            }
+
+            for Pos { x, y: y0 } in start_positions {
+                let y0 = (y0 + 1) * 2;
+                let y1 = self.game.config().height as i8 * 2;
+                for y in y0..y1 {
+                    let y_frac = (y - y0) as f32 / (y1 - y0) as f32;
+                    let t = (1.0 - *frame as f32 / HARD_DROP_TIME as f32 - y_frac * 2.0)
+                        * MAX_BRIGHTNESS;
+                    for dx in 0..2 {
+                        let h = frame_buffer.len();
+                        let [r, g, b] = &mut frame_buffer[h - 1 - y as usize][x as usize * 2 + dx];
+
+                        let [r2, g2, b2] = block_color(Some(end_piece.piece));
+
+                        *r = (*r as f32 * (1.0 - t)
+                            + (r2 as f32 / 255.0 * TINT + (1.0 - TINT)) * (t * 255.0))
+                            .clamp(0.0, 255.0) as u8;
+                        *g = (*g as f32 * (1.0 - t)
+                            + (g2 as f32 / 255.0 * TINT + (1.0 - TINT)) * (t * 255.0))
+                            .clamp(0.0, 255.0) as u8;
+                        *b = (*b as f32 * (1.0 - t)
+                            + (b2 as f32 / 255.0 * TINT + (1.0 - TINT)) * (t * 255.0))
+                            .clamp(0.0, 255.0) as u8;
                     }
                 }
             }
