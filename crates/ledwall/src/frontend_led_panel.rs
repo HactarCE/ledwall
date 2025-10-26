@@ -1,6 +1,6 @@
 use rpi_led_panel::*;
 
-use crate::{App, HEIGHT, WIDTH};
+use crate::{App, HEIGHT, Rgb, WIDTH};
 
 // 0..=100
 const BRIGHTNESS: u8 = 60;
@@ -28,7 +28,7 @@ pub fn main() {
 
         // Update canvas
         for (y, row) in app.buffer().iter().enumerate() {
-            for (x, &[r, g, b]) in row.iter().enumerate() {
+            for (x, &Rgb([r, g, b])) in row.iter().enumerate() {
                 canvas.set_pixel(HEIGHT - 1 - y, x, r, g, b);
             }
         }

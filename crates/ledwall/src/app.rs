@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::{BLACK, FrameBuffer, HEIGHT, Input, WIDTH, tetris};
+use crate::{BLACK, FrameBuffer, HEIGHT, Input, Rgb, WIDTH, tetris};
 
 pub struct App {
     start_time: Instant,
@@ -19,7 +19,7 @@ impl Default for App {
     fn default() -> Self {
         Self {
             start_time: Instant::now(),
-            frame_buffer: Box::new([[[0; 3]; WIDTH]; HEIGHT]),
+            frame_buffer: Box::new([[BLACK; WIDTH]; HEIGHT]),
 
             last_frame_time: Instant::now(),
 
@@ -36,9 +36,6 @@ impl Default for App {
 impl App {
     pub fn buffer(&self) -> &FrameBuffer {
         &self.frame_buffer
-    }
-    pub fn flattened_buffer(&self) -> &[u8] {
-        self.frame_buffer.as_flattened().as_flattened()
     }
 
     pub fn set_image(&mut self, image_data: Option<Vec<u8>>) {
@@ -109,7 +106,7 @@ impl App {
             for x in 0..WIDTH {
                 let color = colorous::RAINBOW
                     .eval_continuous(((x as f64 + y as f64 * 2.0) / 64.0 - t).rem_euclid(1.0));
-                self.frame_buffer[y][x] = color.as_array().map(|x| x / 3);
+                self.frame_buffer[y][x] = Rgb(color.as_array().map(|x| x / 3));
             }
         }
     }
@@ -128,7 +125,7 @@ impl App {
         .into_iter()
         .enumerate()
         {
-            self.frame_buffer[0][i] = [if bit { 255 } else { 0 }; 3];
+            self.frame_buffer[0][i] = Rgb([if bit { 255 } else { 0 }; 3]);
         }
     }
 
@@ -138,9 +135,9 @@ impl App {
             self.frame_buffer.as_flattened_mut(),
         ) {
             let a = a as f32 / 255.0;
-            let [r2, g2, b2] = *out;
-            *out = [(r, r2), (g, g2), (b, b2)]
-                .map(|(x1, x2)| (x1 as f32 * a + x2 as f32 * (1.0 - a)) as u8);
+            let Rgb([r2, g2, b2]) = *out;
+            *out = Rgb([(r, r2), (g, g2), (b, b2)]
+                .map(|(x1, x2)| (x1 as f32 * a + x2 as f32 * (1.0 - a)) as u8))
         }
     }
 }

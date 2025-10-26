@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use macroquad::prelude::*;
 
-use crate::{App, FPS, HEIGHT, WIDTH};
+use crate::{App, FPS, HEIGHT, Rgb, WIDTH};
 
 const SCALE_FACTOR: f32 = 10.0;
 const PADDING: f32 = 25.0;
@@ -79,9 +79,9 @@ pub async fn main() {
     }
 }
 
-fn rgb_to_rgba(rgba_buffer: &mut Vec<u8>, rgb: &[[[u8; 3]; WIDTH]; HEIGHT]) {
+fn rgb_to_rgba(rgba_buffer: &mut Vec<u8>, rgb: &[[Rgb; WIDTH]; HEIGHT]) {
     rgba_buffer.resize(WIDTH * HEIGHT * 4, 255);
     for (i, rgb) in rgb.as_flattened().iter().enumerate() {
-        rgba_buffer[i * 4..i * 4 + 3].copy_from_slice(rgb);
+        rgba_buffer[i * 4..i * 4 + 3].copy_from_slice(bytemuck::bytes_of(rgb));
     }
 }

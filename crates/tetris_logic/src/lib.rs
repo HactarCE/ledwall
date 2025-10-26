@@ -99,6 +99,11 @@ impl<Time: GameTime> Game<Time> {
             pos: self.config.spawn_pos,
             frame_of_last_move: self.frame,
         };
+
+        for _ in 0..self.config.spawn_drop {
+            _ = self.soft_drop();
+        }
+
         if self.ghost_piece_pos().is_none() {
             self.game_over = true; // piece was spawned overlapping a block
         }
@@ -156,6 +161,9 @@ impl<Time: GameTime> Game<Time> {
     }
     pub fn held_piece(&self) -> Option<Tetromino> {
         self.held_piece
+    }
+    pub fn hold_used(&self) -> bool {
+        self.hold_used
     }
 
     /// Advances the game to the next frame.

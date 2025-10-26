@@ -11,8 +11,10 @@ pub struct Config<Time: GameTime> {
     /// within the infinite vanish zone.
     pub buffer_height: u8,
 
-    /// Spawn position for blocks. Blocks move down immediately after appearing.
+    /// Spawn position for pieces.
     pub spawn_pos: Pos,
+    /// Number of times to soft-drop a piece immediately after spawning.
+    pub spawn_drop: u8,
 
     /// DAS (delayed auto shift) behavior.
     ///
@@ -34,6 +36,7 @@ impl<Time: GameTime> Default for Config<Time> {
             buffer_height: 20,
 
             spawn_pos: Pos::new(4, 20),
+            spawn_drop: 2,
 
             das: None,
 
