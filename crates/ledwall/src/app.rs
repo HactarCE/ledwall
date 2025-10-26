@@ -88,7 +88,7 @@ impl App {
             self.image_data = Some(img);
         } else {
             self.display_tetris();
-            self.display_input(input);
+            // self.display_input(input);
         }
     }
 
