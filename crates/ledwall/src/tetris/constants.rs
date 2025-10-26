@@ -1,5 +1,10 @@
 use super::{Tetromino, Transform};
 
+pub const DAS: tetris_logic::Das<u64> = tetris_logic::Das {
+    delay: crate::FPS as u64 / 6,
+    arr: crate::FPS as u64 / 20,
+};
+
 pub mod coordinates {
     use super::Transform;
 
@@ -46,18 +51,18 @@ pub mod colors {
 
 pub mod animations {
     pub mod hard_drop {
-        pub const DURATION: f32 = 0.75; // seconds
+        pub const DURATION: f32 = 0.375; // seconds
         pub const TRAIL_OPACITY: f32 = 0.5;
     }
 
     pub mod lock {
         // should be shorter than `clear`
-        pub const DURATION: f32 = 0.5; // seconds
+        pub const DURATION: f32 = 0.25; // seconds
     }
 
     pub mod clear {
-        pub const SWIPE_DURATION: f32 = 0.375; //seconds
-        pub const FADE_DURATION: f32 = 0.375; // seconds
+        pub const SWIPE_DURATION: f32 = 0.1875; //seconds
+        pub const FADE_DURATION: f32 = 0.1875; // seconds
         pub const DURATION: f32 = SWIPE_DURATION + FADE_DURATION;
     }
 }

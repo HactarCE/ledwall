@@ -1,6 +1,6 @@
 use rpi_led_panel::*;
 
-use crate::{App, HEIGHT, Rgb, WIDTH};
+use crate::{App, FPS, HEIGHT, Rgb, WIDTH};
 
 // 0..=100
 const BRIGHTNESS: u8 = 60;
@@ -11,6 +11,7 @@ pub fn main() {
     config.hardware_mapping = HardwareMapping::adafruit_hat_pwm();
     config.cols = HEIGHT;
     config.rows = WIDTH;
+    config.refresh_rate = FPS;
     let (mut matrix, mut canvas) = RGBMatrix::new(config, 0).expect("error initializing matrix");
 
     let mut app = App::default();

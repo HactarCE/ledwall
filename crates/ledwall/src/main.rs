@@ -13,7 +13,7 @@ mod frontend;
 
 pub type FrameBuffer = [[Rgb; WIDTH]; HEIGHT];
 
-pub const FPS: usize = 60;
+pub const FPS: usize = 120;
 pub const WIDTH: usize = 32;
 pub const HEIGHT: usize = 64;
 

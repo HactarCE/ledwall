@@ -5,7 +5,7 @@ mod animation;
 mod constants;
 mod display;
 
-use crate::{FPS, FrameBuffer, Input};
+use crate::{FrameBuffer, Input};
 use constants::{colors, coordinates};
 use display::Transform;
 
@@ -25,10 +25,7 @@ impl Default for Tetris {
         Self {
             game: tetris_logic::Game::new(
                 tetris_logic::Config {
-                    das: Some(tetris_logic::Das {
-                        delay: FPS as u64 / 3,
-                        arr: FPS as u64 / 10,
-                    }),
+                    das: Some(constants::DAS),
                     ..Default::default()
                 },
                 0,
