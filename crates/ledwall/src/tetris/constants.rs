@@ -3,7 +3,7 @@ use super::{Tetromino, Transform};
 pub mod coordinates {
     use super::Transform;
 
-    pub const PLAYFIELD_3X: Transform = Transform::huge([1, 2], [10, 20]);
+    pub const PLAYFIELD_3X: Transform = Transform::huge([1, 3], [10, 20]);
 
     pub const PLAYFIELD: Transform = Transform::big([1, 23], [10, 20]);
 
@@ -23,7 +23,7 @@ pub mod colors {
     use crate::color::*;
 
     pub const DARKEN_STATIC_BLOCKS: f32 = 0.2;
-    pub const DARKEN_GHOST: f32 = 0.6;
+    pub const DARKEN_GHOST: f32 = 0.7;
     pub const DARKEN_USED_HELD_PIECE: f32 = 0.5;
 
     pub const BACKGROUND: Rgb = BLACK;
@@ -46,8 +46,7 @@ pub mod colors {
 
 pub mod animations {
     pub mod hard_drop {
-        pub const DURATION: f32 = 0.5; // seconds
-        pub const TRAIL_LEN: f32 = 10.0; // blocks
+        pub const DURATION: f32 = 0.75; // seconds
         pub const TRAIL_OPACITY: f32 = 0.5;
     }
 
@@ -57,8 +56,8 @@ pub mod animations {
     }
 
     pub mod clear {
-        pub const SWIPE_DURATION: f32 = 0.25; //seconds
-        pub const FADE_DURATION: f32 = 0.5; // seconds
+        pub const SWIPE_DURATION: f32 = 0.375; //seconds
+        pub const FADE_DURATION: f32 = 0.375; // seconds
         pub const DURATION: f32 = SWIPE_DURATION + FADE_DURATION;
     }
 }

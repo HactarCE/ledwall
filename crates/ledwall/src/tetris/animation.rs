@@ -83,13 +83,15 @@ impl Animation for Lock {
 /// Animation when hard-dropping a piece more than a few tiles.
 pub struct HardDrop {
     frame: u32,
+    trail_len: i8,
     end_piece: FallingPiece<u64>,
 }
 impl_animation_frame!(HardDrop, constants::animations::hard_drop::DURATION);
 impl HardDrop {
-    pub fn new(end_piece: FallingPiece<u64>) -> Self {
+    pub fn new(trail_len: i8, end_piece: FallingPiece<u64>) -> Self {
         Self {
             frame: 0,
+            trail_len,
             end_piece,
         }
     }
@@ -97,6 +99,10 @@ impl HardDrop {
 impl Animation for HardDrop {
     fn draw(&self, fb: &mut FrameBuffer, tf: Transform) {
         use constants::animations::hard_drop::*;
+
+        if self.trail_len == 0 {
+            return;
+        }
 
         let global_t = self.t();
 
@@ -116,8 +122,9 @@ impl Animation for HardDrop {
 
             for dx in 0..tf.scale {
                 let fbx = bx + dx;
+                #[allow(clippy::needless_range_loop)]
                 for fby in fby_max..=by {
-                    let trail_pos = (by - fby) as f32 / TRAIL_LEN;
+                    let trail_pos = (by - fby) as f32 / (self.trail_len as f32 * tf.scale as f32);
                     let t = global_t + trail_pos;
                     let opacity = (1.0 - t) * TRAIL_OPACITY;
                     let pixel = &mut fb[fby][fbx];

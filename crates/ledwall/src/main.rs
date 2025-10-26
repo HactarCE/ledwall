@@ -26,6 +26,7 @@ where
     T: std::ops::Mul<f32, Output = T>,
     T: std::ops::Add<Output = T>,
 {
+    let t = t.clamp(0.0, 1.0);
     a * (1.0 - t) + b * t
 }
 

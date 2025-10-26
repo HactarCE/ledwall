@@ -15,6 +15,8 @@ impl Rgb {
     }
 
     /// Mixes two colors perceptually using Oklab color space.
+    ///
+    /// `t` is clamped between `0.0` and `1.0`.
     pub fn mix(self, other: Rgb, t: f32) -> Rgb {
         let lab1 = oklab::srgb_to_oklab(self.0.into());
         let lab2 = oklab::srgb_to_oklab(other.0.into());

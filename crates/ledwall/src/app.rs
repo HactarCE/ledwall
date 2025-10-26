@@ -69,8 +69,8 @@ impl App {
             r: is_button_pressed(Button::RightTrigger),
             lt: is_button_pressed(Button::LeftTrigger2),
             rt: is_button_pressed(Button::RightTrigger2),
-            plus: is_button_pressed(Button::Select),
-            minus: is_button_pressed(Button::Start),
+            plus: is_button_pressed(Button::Start),
+            minus: is_button_pressed(Button::Select),
             star: false, // can't access
             heart: is_button_pressed(Button::Mode),
         }
@@ -137,7 +137,7 @@ impl App {
             let a = a as f32 / 255.0;
             let Rgb([r2, g2, b2]) = *out;
             *out = Rgb([(r, r2), (g, g2), (b, b2)]
-                .map(|(x1, x2)| (x1 as f32 * a + x2 as f32 * (1.0 - a)) as u8))
+                .map(|(x1, x2)| (x1 as f32 * a + x2 as f32 * (1.0 - a)) as u8));
         }
     }
 }
