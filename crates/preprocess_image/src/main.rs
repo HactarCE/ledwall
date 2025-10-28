@@ -1,24 +1,54 @@
-use image::ImageReader;
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+};
 
-fn main() {
+use image::{EncodableLayout, ImageReader};
+use walkdir::WalkDir;
+
+fn main() -> std::io::Result<()> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 3 {
         eprintln!(
-            "usage: `{} <filename_in> <filename_out>`",
+            "usage: `{} <file_or_dir_in> <file_or_dir_out>`",
             std::env::args().next().unwrap(),
         );
         std::process::exit(1);
     }
-    let in_file = &args[1];
-    let out_file = &args[2];
+    let in_path = PathBuf::from(&args[1]);
+    let out_path = PathBuf::from(&args[2]);
 
-    let img = ImageReader::open(in_file).unwrap().decode().unwrap();
-    let rgba8 = img.into_rgba8();
-    let flat_samples = rgba8.as_flat_samples();
-    let mut rgba_data_out = vec![];
-    let padding_len = flat_samples.min_length().unwrap() / 2;
-    rgba_data_out.extend(std::iter::repeat_n(0, padding_len));
-    rgba_data_out.extend_from_slice(flat_samples.as_slice());
-    rgba_data_out.extend(std::iter::repeat_n(0, padding_len));
-    std::fs::write(out_file, rgba_data_out).unwrap();
+    if in_path.is_dir() {
+        for entry in WalkDir::new(&in_path) {
+            if let Ok(path) = entry.map(|e| e.into_path())
+                && path.is_file()
+                && path.extension().is_some_and(|ext| ext == "png")
+            {
+                let in_file = &path;
+                let out_file =
+                    out_path.join(path.strip_prefix(&in_path).unwrap().with_extension("rgba"));
+                println!("Converting {in_file:?} -> {out_file:?} ...");
+                convert_file(in_file, &out_file)?;
+            }
+        }
+    } else {
+        convert_file(&in_path, &out_path)?;
+    }
+
+    Ok(())
+}
+
+fn convert_file(in_file: &Path, out_file: &Path) -> std::io::Result<()> {
+    let img = ImageReader::open(in_file)?.decode().unwrap();
+
+    if let Some(parent) = out_file.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
+    let mut f = std::fs::File::create(out_file)?;
+    f.write_all(&img.width().to_le_bytes())?;
+    f.write_all(&img.height().to_le_bytes())?;
+    f.write_all(img.into_rgba8().as_bytes())?;
+
+    Ok(())
 }

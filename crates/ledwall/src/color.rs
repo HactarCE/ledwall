@@ -1,3 +1,5 @@
+use crate::mix;
+
 pub const BLACK: Rgb = Rgb::from_hex(0x000000);
 pub const WHITE: Rgb = Rgb::from_hex(0xFFFFFF);
 
@@ -18,14 +20,22 @@ impl Rgb {
     ///
     /// `t` is clamped between `0.0` and `1.0`.
     pub fn mix(self, other: Rgb, t: f32) -> Rgb {
+        // optimize for special cases
+        if t <= 0.0 {
+            return self;
+        }
+        if t >= 1.0 {
+            return other;
+        }
+
         let lab1 = oklab::srgb_to_oklab(self.0.into());
         let lab2 = oklab::srgb_to_oklab(other.0.into());
 
         Self(
             oklab::Oklab {
-                l: crate::mix(lab1.l, lab2.l, t),
-                a: crate::mix(lab1.a, lab2.a, t),
-                b: crate::mix(lab1.b, lab2.b, t),
+                l: mix(lab1.l..lab2.l, t),
+                a: mix(lab1.a..lab2.a, t),
+                b: mix(lab1.b..lab2.b, t),
             }
             .to_srgb()
             .into(),

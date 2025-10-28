@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use macroquad::prelude::*;
 
-use crate::{App, FPS, HEIGHT, Rgb, WIDTH};
+use crate::{FPS, HEIGHT, Rgb, Shell, WIDTH};
 
 const SCALE_FACTOR: f32 = 10.0;
 const PADDING: f32 = 25.0;
@@ -19,11 +19,11 @@ pub async fn main() {
     );
 
     let mut next_frame_time = Instant::now();
-    let mut app = App::default();
+    let mut shell = Shell::default();
 
     let mut rgba_buffer = vec![];
 
-    rgb_to_rgba(&mut rgba_buffer, app.buffer());
+    rgb_to_rgba(&mut rgba_buffer, shell.frame_buffer());
     let texture = Texture2D::from_rgba8(WIDTH as u16, HEIGHT as u16, &rgba_buffer);
     texture.set_filter(FilterMode::Nearest);
 
@@ -41,7 +41,7 @@ pub async fn main() {
         }
 
         // Take input
-        let mut input = app.read_gilrs_input();
+        let mut input = shell.read_gilrs_input();
         input.up |= is_key_down(KeyCode::Up) || is_key_down(KeyCode::W);
         input.down |= is_key_down(KeyCode::Down) || is_key_down(KeyCode::S);
         input.left |= is_key_down(KeyCode::Left) || is_key_down(KeyCode::A);
@@ -51,11 +51,11 @@ pub async fn main() {
         input.x |= is_key_down(KeyCode::L);
         input.r |= is_key_down(KeyCode::Semicolon);
 
-        // Update app
-        app.update(input);
+        // Update state
+        shell.update(input);
 
         // Update display
-        rgb_to_rgba(&mut rgba_buffer, app.buffer());
+        rgb_to_rgba(&mut rgba_buffer, shell.frame_buffer());
         texture.update_from_bytes(WIDTH as u32, HEIGHT as u32, &rgba_buffer);
         draw_texture_ex(
             &texture,

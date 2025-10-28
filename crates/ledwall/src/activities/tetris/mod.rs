@@ -1,20 +1,23 @@
 use rand::SeedableRng;
 use tetris_logic::{FrameInput, Pos, Tetromino};
 
-mod animation;
+mod animations;
 mod constants;
 mod display;
 
-use crate::{FrameBuffer, Input};
+use crate::{
+    Activity, FrameBufferRect, Input, StaticImage, Widget, draw_opt_animation, step_opt_animation,
+};
+use animations::*;
 use constants::{colors, coordinates};
 use display::Transform;
 
 pub struct Tetris {
     game: tetris_logic::Game<u64>,
 
-    clear_anim: Option<animation::Clear>,
-    hard_drop_anim: Option<animation::HardDrop>,
-    lock_anim: Option<animation::Lock>,
+    clear_anim: Option<ClearAnimation>,
+    hard_drop_anim: Option<HardDropAnimation>,
+    lock_anim: Option<LockAnimation>,
 
     big: bool,
     last_input: Input,
@@ -42,14 +45,20 @@ impl Default for Tetris {
     }
 }
 
-impl Tetris {
-    pub fn step(&mut self, input: Input) {
+impl Activity for Tetris {
+    fn menu_image(&self) -> StaticImage {
+        include_rgba_image!("menu/tetris.rgba")
+    }
+}
+
+impl Widget<Input> for Tetris {
+    fn step(&mut self, input: Input) {
         let last_input = std::mem::replace(&mut self.last_input, input);
         self.big ^= input.minus & !last_input.minus;
 
-        animation::step_opt(&mut self.clear_anim);
-        animation::step_opt(&mut self.hard_drop_anim);
-        animation::step_opt(&mut self.lock_anim);
+        step_opt_animation(&mut self.clear_anim);
+        step_opt_animation(&mut self.hard_drop_anim);
+        step_opt_animation(&mut self.lock_anim);
 
         if self.clear_anim.is_some() {
             return; // freeze game
@@ -71,21 +80,21 @@ impl Tetris {
 
         if let Ok(output) = &result {
             if let Some(rows_cleared) = &output.rows_cleared {
-                self.clear_anim = Some(animation::Clear::new(rows_cleared.clone()));
+                self.clear_anim = Some(ClearAnimation::new(rows_cleared.clone()));
             }
             if let Some(locked_piece) = output.locked_piece {
-                self.lock_anim = Some(animation::Lock::new(locked_piece));
+                self.lock_anim = Some(LockAnimation::new(locked_piece));
             }
             if let Some(Ok(dropped_piece)) = output.hard_drop
                 && let Some(locked_piece) = output.locked_piece
             {
                 let trail_len = dropped_piece.pos.y - locked_piece.pos.y;
-                self.hard_drop_anim = Some(animation::HardDrop::new(trail_len, locked_piece));
+                self.hard_drop_anim = Some(HardDropAnimation::new(trail_len, locked_piece));
             }
         }
     }
 
-    pub fn draw(&mut self, fb: &mut FrameBuffer) {
+    fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
         let width = self.game.config().width;
         let height = self.game.config().height;
 
@@ -96,7 +105,7 @@ impl Tetris {
         };
 
         // Draw background
-        fb.as_flattened_mut().fill(colors::BACKGROUND);
+        fb.fill(colors::BACKGROUND);
 
         // Draw static blocks
         for y in 0..height as i8 {
@@ -162,23 +171,23 @@ impl Tetris {
         }
 
         // Draw locking animation
-        animation::draw_opt(&self.lock_anim, fb, playfield);
+        draw_opt_animation(&self.lock_anim, fb, playfield);
 
         // Draw hard drop animation
-        animation::draw_opt(&self.hard_drop_anim, fb, playfield);
+        draw_opt_animation(&self.hard_drop_anim, fb, playfield);
 
         // Draw row clear animation
-        animation::draw_opt(&self.clear_anim, fb, playfield);
+        draw_opt_animation(&self.clear_anim, fb, playfield);
     }
 }
 
-fn fill_piece_preview(transform: Transform, fb: &mut FrameBuffer, piece: Tetromino) {
+fn fill_piece_preview(transform: Transform, fb: &mut FrameBufferRect<'_>, piece: Tetromino) {
     fill_darkened_piece_preview(transform, fb, piece, 0.0);
 }
 
 fn fill_darkened_piece_preview(
     transform: Transform,
-    fb: &mut FrameBuffer,
+    fb: &mut FrameBufferRect<'_>,
     piece: Tetromino,
     darken: f32,
 ) {

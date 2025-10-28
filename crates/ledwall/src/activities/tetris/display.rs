@@ -1,6 +1,6 @@
 use tetris_logic::Pos;
 
-use crate::{FrameBuffer, Rgb};
+use crate::{FrameBufferRect, Rgb};
 
 /// Tetris block coordinate transform to display on the screen.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
@@ -79,14 +79,14 @@ impl Transform {
         .filter(|&xy| crate::xy_is_in_frame(xy))
     }
 
-    pub fn fill_block(self, frame_buffer: &mut FrameBuffer, pos: Pos, color: Rgb) {
-        for [fbx, fby] in self.pixels_of(pos) {
-            frame_buffer[fby][fbx] = color;
+    pub fn fill_block(self, frame_buffer: &mut FrameBufferRect<'_>, pos: Pos, color: Rgb) {
+        for pos in self.pixels_of(pos) {
+            frame_buffer[pos] = color;
         }
     }
-    pub fn fill_border(self, frame_buffer: &mut FrameBuffer, color: Rgb) {
-        for [fbx, fby] in self.border_pixels() {
-            frame_buffer[fby][fbx] = color;
+    pub fn fill_border(self, frame_buffer: &mut FrameBufferRect<'_>, color: Rgb) {
+        for pos in self.border_pixels() {
+            frame_buffer[pos] = color;
         }
     }
 }
