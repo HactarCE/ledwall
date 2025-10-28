@@ -105,6 +105,14 @@ impl Shell {
     }
 
     pub fn update(&mut self, input: Input) -> ShellFrameOutput {
+        if self.gilrs.gamepads().next().is_none() {
+            self.frame_buffer.as_flattened_mut().fill(BLACK);
+            self.current_activity = 0;
+            self.in_menu = false;
+            self.menu_animation = None;
+            return ShellFrameOutput::default();
+        }
+
         let new_input = input.newly_pressed_compared_to(self.last_input);
         self.last_input = input;
 
@@ -146,11 +154,6 @@ impl Shell {
 
     pub fn step_and_draw_menu(&mut self, input: Input) -> ShellFrameOutput {
         let mut output = ShellFrameOutput::default();
-
-        if self.gilrs.gamepads().next().is_none() {
-            self.frame_buffer.as_flattened_mut().fill(BLACK);
-            return ShellFrameOutput::default();
-        }
 
         let mut blue = false;
         let mut green = false;
