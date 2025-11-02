@@ -1,14 +1,14 @@
 use crate::{
     Activity, AnimationFrame, BLACK, DEFAULT_BRIGHTNESS, DEFAULT_VOLUME, FrameBuffer,
-    FrameBufferRect, HEIGHT, Input, Rgb, WHITE, WIDTH, Widget, activities, step_opt_animation,
-    widgets,
+    FrameBufferRect, HEIGHT, Input, Rgb, WHITE, WIDTH, Widget, activities, map_range,
+    step_opt_animation, widgets,
 };
 
-const CONTROLLER_STATUS_BACKGROUND: Rgb = Rgb::from_hex(0x111111);
+const CONTROLLER_STATUS_BACKGROUND: Rgb = BLACK;
 
 const BLUE_CONTROLLER_COLOR: Rgb = Rgb::from_hex(0x7777FF);
 const GREEN_CONTROLLER_COLOR: Rgb = Rgb::from_hex(0x88DD88);
-const DARKEN_DISCONNECTED_CONTROLLER: f32 = 0.5;
+const DARKEN_DISCONNECTED_CONTROLLER: f32 = 0.75;
 
 const BLUE_CONTROLLER_UUID: [u8; 16] = [5, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 0, 0, 1, 0, 0];
 const GREEN_CONTROLLER_UUID: [u8; 16] = [3, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 0, 0, 1, 0, 0];
@@ -16,7 +16,7 @@ const GREEN_CONTROLLER_UUID: [u8; 16] = [3, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 
 const VOLUME_COLOR: Rgb = Rgb::from_hex(0x69F657);
 const BRIGHTNESS_COLOR: Rgb = Rgb::from_hex(0xFFE400);
 
-const BACKGROUND_DIM: f32 = 0.75;
+const BACKGROUND_DIM: f32 = 0.875;
 
 #[derive(Debug, Default)]
 pub struct ShellFrameOutput {
@@ -117,11 +117,9 @@ impl Shell {
         self.last_input = input;
 
         if new_input.heart {
-            self.in_menu ^= true;
-            self.menu_animation = Some(match self.menu_animation {
-                Some(a) => a.reverse(),
-                None => MenuAnimation::new(),
-            });
+            self.toggle_menu();
+        } else if new_input.a && self.in_menu {
+            self.toggle_menu();
         }
         step_opt_animation(&mut self.menu_animation);
 
@@ -152,6 +150,14 @@ impl Shell {
         }
     }
 
+    pub fn toggle_menu(&mut self) {
+        self.in_menu ^= true;
+        self.menu_animation = Some(match self.menu_animation {
+            Some(a) => a.reverse(),
+            None => MenuAnimation::new(),
+        });
+    }
+
     pub fn step_and_draw_menu(&mut self, input: Input) -> ShellFrameOutput {
         let mut output = ShellFrameOutput::default();
 
@@ -161,6 +167,8 @@ impl Shell {
             blue |= gamepad.uuid() == BLUE_CONTROLLER_UUID;
             green |= gamepad.uuid() == GREEN_CONTROLLER_UUID;
         }
+        blue ^= input.x;
+        green ^= input.y;
 
         let mut fb = FrameBufferRect::new(&mut self.frame_buffer);
         let mut t = match self.menu_animation {
@@ -180,7 +188,12 @@ impl Shell {
         // Activity menu image
         self.activities[self.current_activity]
             .menu_image()
-            .draw(&mut upper);
+            .draw_with_custom_blend(&mut upper, |c1, c2, alpha| {
+                c1.mix(
+                    c2,
+                    (alpha as f32 / 255.0) * map_range(t, 0.0..0.125, 1.0..0.0),
+                )
+            });
 
         // Activity selection arrows
         const NANOS_PER_SEC: f32 = 1_000_000_000 as f32;
@@ -197,31 +210,38 @@ impl Shell {
 
         // Border line
         lower
-            .with_offset([0, 39])
+            .with_offset([0, 36])
             .with_size([32, 1])
             .fill(Rgb::from_hex(0x666666));
 
         // Controller status
         {
-            let mut fb = lower.with_offset([0, 40]);
-            let mut fb = fb.with_size([32, 6]);
+            let mut fb = lower.with_offset([0, 37]);
+            let mut fb = fb.with_size([32, 9]);
             fb.fill(CONTROLLER_STATUS_BACKGROUND);
+            let blue_darken = if blue {
+                0.0
+            } else {
+                DARKEN_DISCONNECTED_CONTROLLER
+            };
             include_rgba_image!("controller.rgba").draw_tinted(
-                &mut fb.with_offset([5, 1]),
-                BLUE_CONTROLLER_COLOR.darken(if blue {
-                    0.0
-                } else {
-                    DARKEN_DISCONNECTED_CONTROLLER
-                }),
+                &mut fb.with_offset([1, 1]),
+                BLUE_CONTROLLER_COLOR.darken(blue_darken),
             );
+            include_rgba_image!("controller_buttons.rgba")
+                .draw_tinted(&mut fb.with_offset([1, 1]), WHITE.darken(blue_darken));
+
+            let green_darken = if green {
+                0.0
+            } else {
+                DARKEN_DISCONNECTED_CONTROLLER
+            };
             include_rgba_image!("controller.rgba").draw_tinted(
-                &mut fb.with_offset([19, 1]),
-                GREEN_CONTROLLER_COLOR.darken(if green {
-                    0.0
-                } else {
-                    DARKEN_DISCONNECTED_CONTROLLER
-                }),
+                &mut fb.with_offset([17, 1]),
+                GREEN_CONTROLLER_COLOR.darken(green_darken),
             );
+            include_rgba_image!("controller_buttons.rgba")
+                .draw_tinted(&mut fb.with_offset([17, 1]), WHITE.darken(green_darken));
         }
 
         // Volume slider
@@ -262,7 +282,7 @@ impl Shell {
 
 const ARROW_WIGGLE_DURATION: f32 = 2.0;
 const ARROW_WIGGLE_DUTY_CYCLE: f32 = 0.25;
-const MENU_ANIMATION_DURATION: f32 = 0.125;
+const MENU_ANIMATION_DURATION: f32 = 0.25;
 
 #[derive(Debug, Default, Copy, Clone)]
 struct MenuAnimation {
