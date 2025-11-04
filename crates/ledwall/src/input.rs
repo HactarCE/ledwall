@@ -1,10 +1,56 @@
-use std::time::{Duration, Instant};
+use std::{
+    ops::{BitAnd, BitOr, BitXor, Not},
+    time::{Duration, Instant},
+};
 
 const DELAY: f32 = 1.0 / 3.0; // number of seconds
 const RATE: f32 = 1.0 / 16.0; // number of seconds
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct Input {
+pub struct FullInput {
+    /// Blue controller input state.
+    pub blue: Option<ControllerInput>,
+    /// Green controller input state.
+    pub green: Option<ControllerInput>,
+}
+
+impl FullInput {
+    /// Returns inputs on either controller.
+    pub fn any(self) -> ControllerInput {
+        let blue = self.blue.unwrap_or_default();
+        let green = self.green.unwrap_or_default();
+        ControllerInput {
+            current: blue.current | green.current,
+            previous: blue.previous | green.previous,
+        }
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct ControllerInput {
+    /// Buttons currently held down.
+    pub current: Buttons,
+    /// Buttons held down last frame.
+    pub previous: Buttons,
+}
+
+impl ControllerInput {
+    /// Returns the buttons that were pressed on the current frame.
+    pub fn pressed(self) -> Buttons {
+        self.current & !self.previous
+    }
+    /// Returns the buttons that were released on the current frame.
+    pub fn released(self) -> Buttons {
+        !self.current & self.previous
+    }
+}
+
+/// Boolean for each controller button.
+///
+/// Depending on context, this may represent buttons currently held, buttons
+/// newly pressed, or any other boolean property.
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Buttons {
     // D pad
     pub up: bool,
     pub down: bool,
@@ -30,26 +76,60 @@ pub struct Input {
     pub heart: bool,
 }
 
-impl Input {
-    pub fn newly_pressed_compared_to(self, last_frame_input: Input) -> Input {
-        Self {
-            up: self.up && !last_frame_input.up,
-            down: self.down && !last_frame_input.down,
-            left: self.left && !last_frame_input.left,
-            right: self.right && !last_frame_input.right,
-            a: self.a && !last_frame_input.a,
-            b: self.b && !last_frame_input.b,
-            x: self.x && !last_frame_input.x,
-            y: self.y && !last_frame_input.y,
-            l: self.l && !last_frame_input.l,
-            r: self.r && !last_frame_input.r,
-            lt: self.lt && !last_frame_input.lt,
-            rt: self.rt && !last_frame_input.rt,
-            plus: self.plus && !last_frame_input.plus,
-            minus: self.minus && !last_frame_input.minus,
-            star: self.star && !last_frame_input.star,
-            heart: self.heart && !last_frame_input.heart,
+// tt muncher! because I'm feeling quirky
+macro_rules! construct_fieldwise {
+    (@[$field:ident] [$($done:tt)*] []) => {
+        $($done)*
+    };
+    (@[$field:ident] [$($done:tt)*] [# $($next:tt)*]) => {
+        construct_fieldwise!(@[$field] [$($done)* $field] [$($next)*])
+    };
+    (@[$field:ident] [$($done:tt)*] [$tok:tt $($next:tt)*]) => {
+        construct_fieldwise!(@[$field] [$($done)* $tok] [$($next)*])
+    };
+    ($struct:ident; @[$($field:ident)+] $inner:tt) => {
+        $struct {
+            $( $field: construct_fieldwise!(@[$field] [] $inner), )+
         }
+    };
+    ($struct:ident, $($tok:tt)*) => {
+        construct_fieldwise!(
+            $struct;
+            @[up down left right a b x y l r lt rt plus minus star heart]
+            [$($tok)*]
+        )
+    };
+}
+
+impl BitOr for Buttons {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        construct_fieldwise!(Self, self.# | rhs.#)
+    }
+}
+
+impl BitAnd for Buttons {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        construct_fieldwise!(Self, self.# & rhs.#)
+    }
+}
+
+impl BitXor for Buttons {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        construct_fieldwise!(Self, self.# ^ rhs.#)
+    }
+}
+
+impl Not for Buttons {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        construct_fieldwise!(Self, !self.#)
     }
 }
 

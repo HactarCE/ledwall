@@ -6,7 +6,8 @@ mod constants;
 mod display;
 
 use crate::{
-    Activity, FrameBufferRect, Input, StaticImage, Widget, draw_opt_animation, step_opt_animation,
+    Activity, Buttons, FrameBufferRect, FullInput, StaticImage, Widget, draw_opt_animation,
+    step_opt_animation,
 };
 use animations::*;
 use constants::{colors, coordinates};
@@ -20,7 +21,7 @@ pub struct Tetris {
     lock_anim: Option<LockAnimation>,
 
     big: bool,
-    last_input: Input,
+    last_input: Buttons,
 }
 
 impl Default for Tetris {
@@ -40,7 +41,7 @@ impl Default for Tetris {
             lock_anim: None,
 
             big: false,
-            last_input: Input::default(),
+            last_input: Buttons::default(),
         }
     }
 }
@@ -51,10 +52,12 @@ impl Activity for Tetris {
     }
 }
 
-impl Widget<Input> for Tetris {
-    fn step(&mut self, input: Input) {
-        let last_input = std::mem::replace(&mut self.last_input, input);
-        self.big ^= input.minus & !last_input.minus;
+impl Widget<FullInput> for Tetris {
+    fn step(&mut self, input: FullInput) {
+        let keys_down = input.any().current;
+        let keys_pressed = input.any().pressed();
+
+        self.big ^= keys_pressed.minus;
 
         step_opt_animation(&mut self.clear_anim);
         step_opt_animation(&mut self.hard_drop_anim);
@@ -67,14 +70,14 @@ impl Widget<Input> for Tetris {
         let result = self.game.step(
             1,
             FrameInput {
-                left: input.left,
-                right: input.right,
-                soft_drop: input.down,
-                hard_drop: input.up,
-                rot_cw: input.a || input.y,
-                rot_ccw: input.b,
-                rot_180: input.x,
-                hold: input.l || input.r || input.lt || input.rt,
+                left: keys_down.left,      // DAS
+                right: keys_down.right,    // DAS
+                soft_drop: keys_down.down, // DAS
+                hard_drop: keys_pressed.up,
+                rot_cw: keys_pressed.a || keys_pressed.y,
+                rot_ccw: keys_pressed.b,
+                rot_180: keys_pressed.x,
+                hold: keys_pressed.l || keys_pressed.r || keys_pressed.lt || keys_pressed.rt,
             },
         );
 

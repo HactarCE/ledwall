@@ -1,7 +1,10 @@
+#[cfg(feature = "gilrs")]
+use macroquad::ui::widgets::Button;
+
 use crate::{
-    Activity, AnimationFrame, BLACK, DEFAULT_BRIGHTNESS, DEFAULT_VOLUME, FrameBuffer,
-    FrameBufferRect, HEIGHT, Input, Rgb, WHITE, WIDTH, Widget, activities, map_range,
-    step_opt_animation, widgets,
+    Activity, AnimationFrame, BLACK, Buttons, ControllerInput, DEFAULT_BRIGHTNESS, DEFAULT_VOLUME,
+    FrameBuffer, FrameBufferRect, FullInput, HEIGHT, Rgb, WHITE, WIDTH, Widget, activities,
+    map_range, step_opt_animation, widgets,
 };
 
 const CONTROLLER_STATUS_BACKGROUND: Rgb = BLACK;
@@ -27,7 +30,8 @@ pub struct ShellFrameOutput {
 pub struct Shell {
     first_frame: std::time::Instant,
     frame_buffer: Box<FrameBuffer>,
-    last_input: Input,
+    last_input_blue: Option<Buttons>,
+    last_input_green: Option<Buttons>,
 
     #[cfg(feature = "gilrs")]
     gilrs: gilrs::Gilrs,
@@ -48,7 +52,8 @@ impl Default for Shell {
         Self {
             first_frame: std::time::Instant::now(),
             frame_buffer: Box::new([[BLACK; WIDTH]; HEIGHT]),
-            last_input: Input::default(),
+            last_input_blue: None,
+            last_input_green: None,
 
             #[cfg(feature = "gilrs")]
             gilrs: gilrs::Gilrs::new().expect("error initializing gamepad"),
@@ -71,41 +76,64 @@ impl Shell {
     }
 
     #[cfg(feature = "gilrs")]
-    pub fn read_gilrs_input(&mut self) -> Input {
+    pub fn read_gilrs_input(&mut self) -> (Option<Buttons>, Option<Buttons>) {
         use gilrs::{Axis, Button};
 
+        // Process gilrs events
         while self.gilrs.next_event().is_some() {}
 
-        let Some((_id, gamepad)) = self.gilrs.gamepads().next() else {
-            return Input::default();
-        };
+        let mut blue = None;
+        let mut green = None;
 
-        let x = gamepad.axis_data(Axis::LeftStickX);
-        let y = gamepad.axis_data(Axis::LeftStickY);
-        let is_button_pressed = |b| gamepad.button_data(b).is_some_and(|d| d.is_pressed());
+        for (_id, gamepad) in self.gilrs.gamepads() {
+            let x = gamepad.axis_data(Axis::LeftStickX);
+            let y = gamepad.axis_data(Axis::LeftStickY);
+            let is_button_pressed = |b| gamepad.button_data(b).is_some_and(|d| d.is_pressed());
+            let current_button_states = Buttons {
+                up: y.is_some_and(|y| y.value() > 0.5),
+                down: y.is_some_and(|y| y.value() < -0.5),
+                left: x.is_some_and(|x| x.value() < -0.5),
+                right: x.is_some_and(|x| x.value() > 0.5),
+                a: is_button_pressed(Button::East),
+                b: is_button_pressed(Button::South),
+                x: is_button_pressed(Button::North),
+                y: is_button_pressed(Button::West),
+                l: is_button_pressed(Button::LeftTrigger),
+                r: is_button_pressed(Button::RightTrigger),
+                lt: is_button_pressed(Button::LeftTrigger2),
+                rt: is_button_pressed(Button::RightTrigger2),
+                plus: is_button_pressed(Button::Start),
+                minus: is_button_pressed(Button::Select),
+                star: false, // can't access
+                heart: is_button_pressed(Button::Mode),
+            };
 
-        Input {
-            up: y.is_some_and(|y| y.value() > 0.5),
-            down: y.is_some_and(|y| y.value() < -0.5),
-            left: x.is_some_and(|x| x.value() < -0.5),
-            right: x.is_some_and(|x| x.value() > 0.5),
-            a: is_button_pressed(Button::East),
-            b: is_button_pressed(Button::South),
-            x: is_button_pressed(Button::North),
-            y: is_button_pressed(Button::West),
-            l: is_button_pressed(Button::LeftTrigger),
-            r: is_button_pressed(Button::RightTrigger),
-            lt: is_button_pressed(Button::LeftTrigger2),
-            rt: is_button_pressed(Button::RightTrigger2),
-            plus: is_button_pressed(Button::Start),
-            minus: is_button_pressed(Button::Select),
-            star: false, // can't access
-            heart: is_button_pressed(Button::Mode),
+            *match gamepad.uuid() {
+                BLUE_CONTROLLER_UUID => &mut blue,
+                GREEN_CONTROLLER_UUID => &mut green,
+                _ => &mut green, // fallback for unrecognized controller
+            } = Some(current_button_states);
         }
+
+        (blue, green)
     }
 
-    pub fn update(&mut self, input: Input) -> ShellFrameOutput {
-        if self.gilrs.gamepads().next().is_none() {
+    pub fn update(&mut self, blue: Option<Buttons>, green: Option<Buttons>) -> ShellFrameOutput {
+        let prev_blue = std::mem::replace(&mut self.last_input_blue, blue);
+        let prev_green = std::mem::replace(&mut self.last_input_green, green);
+
+        let full_input = FullInput {
+            blue: blue.and_then(|current| {
+                let previous = prev_blue.unwrap_or_default();
+                Some(ControllerInput { current, previous })
+            }),
+            green: green.and_then(|current| {
+                let previous = prev_green.unwrap_or_default();
+                Some(ControllerInput { current, previous })
+            }),
+        };
+
+        if blue.is_none() && green.is_none() {
             self.frame_buffer.as_flattened_mut().fill(BLACK);
             self.current_activity = 0;
             self.in_menu = false;
@@ -113,23 +141,22 @@ impl Shell {
             return ShellFrameOutput::default();
         }
 
-        let new_input = input.newly_pressed_compared_to(self.last_input);
-        self.last_input = input;
+        let pressed_keys = full_input.any().pressed();
 
-        if new_input.heart {
+        if pressed_keys.heart {
             self.toggle_menu();
-        } else if new_input.a && self.in_menu {
+        } else if self.in_menu && pressed_keys.a {
             self.toggle_menu();
         }
         step_opt_animation(&mut self.menu_animation);
 
         if self.in_menu {
             let activity_count = self.activities.len();
-            if new_input.left {
+            if pressed_keys.left {
                 self.current_activity =
                     (self.current_activity + activity_count - 1) % activity_count;
             }
-            if new_input.right {
+            if pressed_keys.right {
                 self.current_activity = (self.current_activity + 1) % activity_count;
             }
         }
@@ -139,12 +166,12 @@ impl Shell {
         fb.fill(BLACK);
 
         let activity = &mut self.activities[self.current_activity];
-        if !self.in_menu {
-            activity.step(input);
+        if !self.in_menu && self.menu_animation.is_none() {
+            activity.step(full_input);
         }
         activity.draw(&mut fb);
         if self.in_menu || self.menu_animation.is_some() {
-            self.step_and_draw_menu(input)
+            self.step_and_draw_menu(full_input.any())
         } else {
             ShellFrameOutput::default()
         }
@@ -158,7 +185,7 @@ impl Shell {
         });
     }
 
-    pub fn step_and_draw_menu(&mut self, input: Input) -> ShellFrameOutput {
+    pub fn step_and_draw_menu(&mut self, input: ControllerInput) -> ShellFrameOutput {
         let mut output = ShellFrameOutput::default();
 
         let mut blue = false;
@@ -167,8 +194,8 @@ impl Shell {
             blue |= gamepad.uuid() == BLUE_CONTROLLER_UUID;
             green |= gamepad.uuid() == GREEN_CONTROLLER_UUID;
         }
-        blue ^= input.x;
-        green ^= input.y;
+        blue ^= input.current.x;
+        green ^= input.current.y;
 
         let mut fb = FrameBufferRect::new(&mut self.frame_buffer);
         let mut t = match self.menu_animation {
@@ -252,7 +279,8 @@ impl Shell {
             include_rgba_image!("volume.rgba")
                 .draw_tinted(&mut fb.with_offset([1, 1]), VOLUME_COLOR);
             include_rgba_image!("l_r.rgba").draw_tinted(&mut fb.with_offset([11, 1]), WHITE);
-            self.volume_slider.step([input.l, input.r]);
+            self.volume_slider
+                .step([input.pressed().l, input.pressed().r]);
             self.volume_slider
                 .draw(&mut fb.with_offset([11, 6]).with_size([20, 2]));
         }
@@ -266,7 +294,8 @@ impl Shell {
             include_rgba_image!("brightness.rgba")
                 .draw_tinted(&mut fb.with_offset([1, 1]), BRIGHTNESS_COLOR);
             include_rgba_image!("l2_r2.rgba").draw_tinted(&mut fb.with_offset([11, 1]), WHITE);
-            self.brightness_slider.step([input.lt, input.rt]);
+            self.brightness_slider
+                .step([input.pressed().lt, input.pressed().rt]);
             self.brightness_slider
                 .draw(&mut fb.with_offset([11, 6]).with_size([20, 2]));
 

@@ -1,4 +1,4 @@
-use crate::{FrameBufferRect, Input, StaticImage};
+use crate::{FrameBufferRect, FullInput, StaticImage};
 
 pub trait Widget<I> {
     fn step(&mut self, _input: I) {}
@@ -6,7 +6,7 @@ pub trait Widget<I> {
     fn draw(&mut self, fb: &mut FrameBufferRect<'_>);
 }
 
-pub trait Activity: Widget<Input> {
+pub trait Activity: Widget<FullInput> {
     fn menu_image(&self) -> StaticImage;
 
     /// Returns whether to stay awake even if all controllers disconnect.

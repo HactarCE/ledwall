@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::{Activity, FrameBufferRect, Input, Rgb, Widget};
+use crate::{Activity, FrameBufferRect, FullInput, Rgb, Widget};
 
 #[derive(Debug)]
 pub struct Rainbow {
@@ -15,7 +15,7 @@ impl Rainbow {
     }
 }
 
-impl Widget<Input> for Rainbow {
+impl Widget<FullInput> for Rainbow {
     fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
         let t = self.start_time.elapsed().as_secs_f64() / 2.0;
         fb.fill_with_fn(|[x, y], _| {

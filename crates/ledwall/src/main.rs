@@ -17,7 +17,7 @@ pub use animation::{Animation, AnimationFrame, draw_opt_animation, step_opt_anim
 pub use color::*;
 pub use frame_buffer::{FrameBuffer, FrameBufferRect};
 pub use image::StaticImage;
-pub use input::{Input, KeyRepeat};
+pub use input::{Buttons, ControllerInput, FullInput, KeyRepeat};
 pub use shell::Shell;
 pub use traits::{Activity, Widget};
 

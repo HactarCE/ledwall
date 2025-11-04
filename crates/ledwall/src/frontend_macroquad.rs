@@ -40,19 +40,40 @@ pub async fn main() {
             show_fps ^= true;
         }
 
-        // Take input
-        let mut input = shell.read_gilrs_input();
-        input.up |= is_key_down(KeyCode::Up) || is_key_down(KeyCode::W);
-        input.down |= is_key_down(KeyCode::Down) || is_key_down(KeyCode::S);
-        input.left |= is_key_down(KeyCode::Left) || is_key_down(KeyCode::A);
-        input.right |= is_key_down(KeyCode::Right) || is_key_down(KeyCode::D);
-        input.a |= is_key_down(KeyCode::K);
-        input.b |= is_key_down(KeyCode::J);
-        input.x |= is_key_down(KeyCode::L);
-        input.r |= is_key_down(KeyCode::Semicolon);
+        // Take gamepad input
+        let (mut blue, green) = shell.read_gilrs_input();
+
+        // Take keyboard input
+        let pressed = blue.get_or_insert_default();
+        {
+            // D pad
+            pressed.up |= is_key_down(KeyCode::Up) || is_key_down(KeyCode::W);
+            pressed.down |= is_key_down(KeyCode::Down) || is_key_down(KeyCode::S);
+            pressed.left |= is_key_down(KeyCode::Left) || is_key_down(KeyCode::A);
+            pressed.right |= is_key_down(KeyCode::Right) || is_key_down(KeyCode::D);
+
+            // Thumb buttons
+            pressed.a |= is_key_down(KeyCode::K);
+            pressed.b |= is_key_down(KeyCode::J);
+            pressed.x |= is_key_down(KeyCode::L);
+            pressed.y |= is_key_down(KeyCode::I);
+
+            // Shoulder buttons
+            pressed.l |= is_key_down(KeyCode::X);
+            pressed.lt |= is_key_down(KeyCode::C);
+            pressed.rt |= is_key_down(KeyCode::Comma);
+            pressed.r |= is_key_down(KeyCode::Period);
+            pressed.r |= is_key_down(KeyCode::Semicolon); // "hold" in tetris
+
+            pressed.plus |= is_key_down(KeyCode::Enter);
+            pressed.plus |= is_key_down(KeyCode::Equal);
+            pressed.minus |= is_key_down(KeyCode::Minus);
+            pressed.star |= is_key_down(KeyCode::Key8);
+            pressed.heart |= is_key_down(KeyCode::Escape);
+        }
 
         // Update state
-        shell.update(input);
+        shell.update(blue, green);
 
         // Update display
         rgb_to_rgba(&mut rgba_buffer, shell.frame_buffer());
@@ -82,6 +103,6 @@ pub async fn main() {
 fn rgb_to_rgba(rgba_buffer: &mut Vec<u8>, rgb: &[[Rgb; WIDTH]; HEIGHT]) {
     rgba_buffer.resize(WIDTH * HEIGHT * 4, 255);
     for (i, rgb) in rgb.as_flattened().iter().enumerate() {
-        rgba_buffer[i * 4..i * 4 + 3].copy_from_slice(bytemuck::bytes_of(rgb));
+        rgba_buffer[i * 4..][..3].copy_from_slice(bytemuck::bytes_of(rgb));
     }
 }

@@ -15,6 +15,8 @@ macro_rules! include_rgba_image {
 pub struct StaticImage(pub &'static [u8]);
 
 impl StaticImage {
+    pub const EMPTY: Self = Self(&[0_u8; 8]);
+
     pub fn width(self) -> usize {
         u32::from_le_bytes([0, 1, 2, 3].map(|i| self.0[i])) as usize
     }
@@ -29,15 +31,21 @@ impl StaticImage {
     }
 
     pub fn draw(self, fb: &mut FrameBufferRect<'_>) {
+        self.draw_with_color_fn(fb, |c| c);
+    }
+
+    pub fn draw_with_color_fn(
+        self,
+        fb: &mut FrameBufferRect<'_>,
+        mut color_fn: impl FnMut(Rgb) -> Rgb,
+    ) {
         self.draw_with_custom_blend(fb, |fb_pixel, image_pixel, alpha| {
-            fb_pixel.mix(image_pixel, alpha as f32 / 255.0)
+            fb_pixel.mix(color_fn(image_pixel), alpha as f32 / 255.0)
         });
     }
 
     pub fn draw_tinted(self, fb: &mut FrameBufferRect<'_>, tint: Rgb) {
-        self.draw_with_custom_blend(fb, |fb_pixel, _image_pixel, alpha| {
-            fb_pixel.mix(tint, alpha as f32 / 255.0)
-        });
+        self.draw_with_color_fn(fb, |_| tint);
     }
 
     /// Draws an image to the screen using a custom blend function, given the
