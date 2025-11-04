@@ -83,6 +83,19 @@ impl Widget<FullInput> for Tetris {
 
         if let Ok(output) = &result {
             if let Some(rows_cleared) = &output.rows_cleared {
+                let mut rows_cleared = rows_cleared.iter().map(|&y| (y, 3.5)).collect::<Vec<_>>();
+                if let Some(locked_piece) = output.locked_piece {
+                    let coords = locked_piece.coordinates();
+                    for (y, mid) in &mut rows_cleared {
+                        let mut sum = 0.0;
+                        let mut count = 0;
+                        for &Pos { x, y: _ } in coords.iter().filter(|pos| pos.y == *y) {
+                            sum += x as f32;
+                            count += 1;
+                        }
+                        *mid = sum / count as f32;
+                    }
+                }
                 self.clear_anim = Some(ClearAnimation::new(rows_cleared.clone()));
             }
             if let Some(locked_piece) = output.locked_piece {

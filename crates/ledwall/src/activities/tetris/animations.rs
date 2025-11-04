@@ -92,11 +92,11 @@ impl Animation<Transform> for HardDropAnimation {
 /// Animation when clearing a row.
 pub struct ClearAnimation {
     frame: u32,
-    rows: Vec<i8>,
+    rows: Vec<(i8, f32)>,
 }
 impl_animation_frame!(ClearAnimation, constants::animations::clear::DURATION);
 impl ClearAnimation {
-    pub fn new(rows: Vec<i8>) -> Self {
+    pub fn new(rows: Vec<(i8, f32)>) -> Self {
         Self { frame: 0, rows }
     }
 }
@@ -108,18 +108,38 @@ impl Animation<Transform> for ClearAnimation {
 
         let pixel_width = tf.size[0] as usize * tf.scale;
 
-        for &y in &self.rows {
+        for &(y, middle_x) in &self.rows {
             let Some([fbx, fby]) = tf.base_pixel(Pos { x: 0, y }) else {
                 continue;
             };
             for dy in 0..tf.scale {
                 for dx in 0..pixel_width {
-                    let fade_t = ((swipe_t - dx as f32 / pixel_width as f32) * SWIPE_DURATION
+                    let distance = (dx as f32 - (middle_x as f32 + 0.5) * tf.scale as f32).abs();
+                    let fade_t = ((swipe_t - distance / pixel_width as f32) * SWIPE_DURATION
                         / FADE_DURATION)
                         .clamp(0.0, 1.0);
                     if fade_t > 0.0 {
                         let pixel = &mut fb[[fbx + dx, fby - dy]];
                         *pixel = pixel.lighten(1.0 - fade_t).darken(fade_t);
+                    }
+                }
+            }
+        }
+
+        let t = (self.t() * DURATION - SWIPE_DURATION - FADE_DURATION) / FALL_DURATION;
+        if t > 0.0 {
+            let mut cleared_rows_below = 0;
+            for y in 0..tf.size[1] as i8 {
+                if self.rows.iter().any(|&(r, _)| r == y) {
+                    cleared_rows_below += 1;
+                }
+                if cleared_rows_below > 0 {
+                    for x in 0..tf.size[0] as i8 {
+                        let delta = cleared_rows_below as f32 * tf.scale as f32 * t;
+                        for [fbx, fby] in tf.pixels_of(Pos { x, y }) {
+                            fb[[fbx, fby]] = fb[[fbx, fby - delta.floor() as usize]]
+                                .mix(fb[[fbx, fby - delta.ceil() as usize]], delta.fract());
+                        }
                     }
                 }
             }

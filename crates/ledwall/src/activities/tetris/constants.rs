@@ -63,6 +63,7 @@ pub mod animations {
     pub mod clear {
         pub const SWIPE_DURATION: f32 = 0.1875; //seconds
         pub const FADE_DURATION: f32 = 0.1875; // seconds
-        pub const DURATION: f32 = SWIPE_DURATION + FADE_DURATION;
+        pub const FALL_DURATION: f32 = 0.09375; // seconds
+        pub const DURATION: f32 = SWIPE_DURATION + FADE_DURATION + FALL_DURATION;
     }
 }
