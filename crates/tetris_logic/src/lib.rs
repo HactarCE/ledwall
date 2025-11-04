@@ -192,8 +192,6 @@ impl<Time: GameTime> Game<Time> {
         // // Move piece down automatically.
         // self.config.master_mode
 
-        self.rows_to_clear = self.playfield.full_rows().collect();
-
         // Attempt actions.
         let actions_completed = FrameOutput {
             left: actions_requested.left.then(|| self.move_left()),
@@ -210,7 +208,10 @@ impl<Time: GameTime> Game<Time> {
             rot_180: actions_requested.rot_180.then(|| self.rotate_180()),
             hold: actions_requested.hold.then(|| self.hold()),
             locked_piece,
-            rows_cleared: Some(self.rows_to_clear.clone()).filter(|list| !list.is_empty()),
+            rows_cleared: {
+                self.rows_to_clear = self.playfield.full_rows().collect();
+                Some(self.rows_to_clear.clone()).filter(|list| !list.is_empty())
+            },
         };
 
         // Check for game-over.
