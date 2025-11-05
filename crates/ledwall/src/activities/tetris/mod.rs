@@ -45,6 +45,10 @@ impl Default for Tetris {
 }
 
 impl Activity for Tetris {
+    fn reset(&mut self) {
+        *self = Self::default();
+    }
+
     fn menu_image(&self) -> StaticImage {
         include_rgba_image!("menu/tetris.rgba")
     }

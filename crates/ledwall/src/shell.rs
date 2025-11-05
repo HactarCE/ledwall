@@ -37,6 +37,7 @@ pub struct Shell {
 
     activities: Vec<Box<dyn Activity>>,
     current_activity: usize,
+    activity_reset_animation: Option<ActivityResetAnimation>,
 
     /// Volume on a scale from 0 to 20
     volume_slider: widgets::Slider,
@@ -59,6 +60,7 @@ impl Default for Shell {
 
             activities: activities::init_activities(),
             current_activity: 0,
+            activity_reset_animation: None,
 
             volume_slider: widgets::Slider::new(DEFAULT_VOLUME, 0..=20, VOLUME_COLOR),
             brightness_slider: widgets::Slider::new(DEFAULT_BRIGHTNESS, 1..=20, BRIGHTNESS_COLOR),
@@ -152,16 +154,23 @@ impl Shell {
         if pressed_keys.heart || (self.in_menu && pressed_keys.a) {
             self.toggle_menu();
         }
+        if self.in_menu && pressed_keys.x {
+            self.activities[self.current_activity].reset();
+            self.activity_reset_animation = Some(ActivityResetAnimation::new())
+        }
         step_opt_animation(&mut self.menu_animation);
+        step_opt_animation(&mut self.activity_reset_animation);
 
         if self.in_menu {
             let activity_count = self.activities.len();
             if pressed_keys.left {
                 self.current_activity =
                     (self.current_activity + activity_count - 1) % activity_count;
+                self.activity_reset_animation = None;
             }
             if pressed_keys.right {
                 self.current_activity = (self.current_activity + 1) % activity_count;
+                self.activity_reset_animation = None;
             }
         }
 
@@ -202,8 +211,6 @@ impl Shell {
                 blue |= gamepad.uuid() == BLUE_CONTROLLER_UUID;
                 green |= gamepad.uuid() == GREEN_CONTROLLER_UUID;
             }
-            blue ^= input.current.x;
-            green ^= input.current.y;
         }
 
         let mut fb = FrameBufferRect::new(&mut self.frame_buffer);
@@ -222,11 +229,15 @@ impl Shell {
         let mut upper = fb.with_offset([0, (fb.height() as f32 / 2.0 * -t) as isize]);
 
         // Activity menu image
+        let darken = match self.activity_reset_animation {
+            Some(anim) => map_range(anim.t(), 0.5..1.0, 0.5..0.0),
+            None => 0.0,
+        };
         self.activities[self.current_activity]
             .menu_image()
             .draw_with_custom_blend(&mut upper, |c1, c2, alpha| {
                 c1.mix(
-                    c2,
+                    c2.darken(darken),
                     (alpha as f32 / 255.0) * map_range(t, 0.0..0.125, 1.0..0.0),
                 )
             });
@@ -337,5 +348,18 @@ impl MenuAnimation {
         Self {
             frame: frame_count.saturating_sub(self.frame),
         }
+    }
+}
+
+const ACTIVITY_RESET_ANIMATION_DURATION: f32 = 1.0;
+
+#[derive(Debug, Default, Copy, Clone)]
+struct ActivityResetAnimation {
+    frame: u32,
+}
+impl_animation_frame!(ActivityResetAnimation, ACTIVITY_RESET_ANIMATION_DURATION);
+impl ActivityResetAnimation {
+    pub fn new() -> Self {
+        Self { frame: 0 }
     }
 }

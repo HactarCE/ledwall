@@ -9,6 +9,8 @@ pub trait Widget<I> {
 pub trait Activity: Widget<FullInput> {
     fn menu_image(&self) -> StaticImage;
 
+    fn reset(&mut self);
+
     /// Returns whether to stay awake even if all controllers disconnect.
     fn stay_awake(&self) -> bool {
         false
