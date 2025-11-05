@@ -6,9 +6,31 @@
 
 The LED wall supports several activities. Pressing the heart button (or "home" on most controllers) opens a menu that allows adjusting volume (currently unimplemented) and brightness and switching between activities.
 
+### Life
+
+_[Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) on a 32x64 torus_
+
+By default the simulation runs at 40 FPS.
+
+- Press X to clear the grid.
+- Press Y to randomize the grid.
+- Hold L to slow down to 12 FPS.
+- Hold R to speed up to 120 FPS.
+
+The simulation automatically re-randomizes a few seconds after it detects a cycle.
+
+Planned features:
+
+- [ ] Pausing
+- [ ] Rewinding
+- [ ] Editing individual cells
+- [ ] Saving & loading patterns
+
 ### Tetris
 
-This repository contains a standards-compliant Tetris implementation. The `tetris_logic` crate is completely frontend-independent and is designed to be reusable for other projects. Completed/planned features include:
+_[Guideline](https://tetris.wiki/Tetris_Guideline)-compliant Tetris implementation_
+
+The `tetris_logic` crate is completely frontend-independent and is designed to be reusable for other projects. Completed/planned features include:
 
 - [x] Customizable game parameters via [`Config` struct](https://github.com/HactarCE/ledwall/blob/main/crates/tetris_logic/src/config.rs)
 - [x] [SRS](https://tetris.wiki/Super_Rotation_System), including 180-degree rotation
