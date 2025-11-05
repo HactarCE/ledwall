@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use macroquad::prelude::*;
 
-use crate::{FPS, HEIGHT, Rgb, Shell, WIDTH};
+use crate::{Buttons, FPS, HEIGHT, Rgb, Shell, WIDTH};
 
 const SCALE_FACTOR: f32 = 10.0;
 const PADDING: f32 = 25.0;
@@ -41,10 +41,13 @@ pub async fn main() {
         }
 
         // Take gamepad input
+        #[cfg(feature = "gilrs")]
         let (mut blue, green) = shell.read_gilrs_input();
+        #[cfg(not(feature = "gilrs"))]
+        let (mut blue, green) = (None, None);
 
         // Take keyboard input
-        let pressed = blue.get_or_insert_default();
+        let pressed: &mut Buttons = blue.get_or_insert_default();
         {
             // D pad
             pressed.up |= is_key_down(KeyCode::Up) || is_key_down(KeyCode::W);

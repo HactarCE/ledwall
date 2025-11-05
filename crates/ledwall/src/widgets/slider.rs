@@ -39,7 +39,7 @@ impl Slider {
         self.value
     }
     pub fn trigger_animation(&mut self) {
-        self.flash = Some(FlashAnimation { frame: 0 })
+        self.flash = Some(FlashAnimation { frame: 0 });
     }
     pub fn set(&mut self, new_value: u8) {
         self.value = new_value.clamp(*self.range.start(), *self.range.end());

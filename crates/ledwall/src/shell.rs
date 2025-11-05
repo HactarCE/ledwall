@@ -1,6 +1,3 @@
-#[cfg(feature = "gilrs")]
-use macroquad::ui::widgets::Button;
-
 use crate::{
     Activity, AnimationFrame, BLACK, Buttons, ControllerInput, DEFAULT_BRIGHTNESS, DEFAULT_VOLUME,
     FrameBuffer, FrameBufferRect, FullInput, HEIGHT, Rgb, WHITE, WIDTH, Widget, activities,
@@ -13,7 +10,9 @@ const BLUE_CONTROLLER_COLOR: Rgb = Rgb::from_hex(0x7777FF);
 const GREEN_CONTROLLER_COLOR: Rgb = Rgb::from_hex(0x88DD88);
 const DARKEN_DISCONNECTED_CONTROLLER: f32 = 0.75;
 
+#[cfg(feature = "gilrs")]
 const BLUE_CONTROLLER_UUID: [u8; 16] = [5, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 0, 0, 1, 0, 0];
+#[cfg(feature = "gilrs")]
 const GREEN_CONTROLLER_UUID: [u8; 16] = [3, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 0, 0, 1, 0, 0];
 
 const VOLUME_COLOR: Rgb = Rgb::from_hex(0x69F657);
@@ -80,7 +79,14 @@ impl Shell {
         use gilrs::{Axis, Button};
 
         // Process gilrs events
-        while self.gilrs.next_event().is_some() {}
+        while let Some(ev) = self.gilrs.next_event() {
+            if let gilrs::EventType::Connected = ev.event
+                && let Some(gamepad) = self.gilrs.connected_gamepad(ev.id)
+            {
+                let uuid = gamepad.uuid();
+                println!("Connected controller with UUID {uuid:?}");
+            }
+        }
 
         let mut blue = None;
         let mut green = None;
@@ -123,13 +129,13 @@ impl Shell {
         let prev_green = std::mem::replace(&mut self.last_input_green, green);
 
         let full_input = FullInput {
-            blue: blue.and_then(|current| {
+            blue: blue.map(|current| {
                 let previous = prev_blue.unwrap_or_default();
-                Some(ControllerInput { current, previous })
+                ControllerInput { current, previous }
             }),
-            green: green.and_then(|current| {
+            green: green.map(|current| {
                 let previous = prev_green.unwrap_or_default();
-                Some(ControllerInput { current, previous })
+                ControllerInput { current, previous }
             }),
         };
 
@@ -143,9 +149,7 @@ impl Shell {
 
         let pressed_keys = full_input.any().pressed();
 
-        if pressed_keys.heart {
-            self.toggle_menu();
-        } else if self.in_menu && pressed_keys.a {
+        if pressed_keys.heart || (self.in_menu && pressed_keys.a) {
             self.toggle_menu();
         }
         step_opt_animation(&mut self.menu_animation);
@@ -188,14 +192,19 @@ impl Shell {
     pub fn step_and_draw_menu(&mut self, input: ControllerInput) -> ShellFrameOutput {
         let mut output = ShellFrameOutput::default();
 
+        #[allow(unused_mut)]
         let mut blue = false;
+        #[allow(unused_mut)]
         let mut green = false;
-        for (_id, gamepad) in self.gilrs.gamepads() {
-            blue |= gamepad.uuid() == BLUE_CONTROLLER_UUID;
-            green |= gamepad.uuid() == GREEN_CONTROLLER_UUID;
+        #[cfg(feature = "gilrs")]
+        {
+            for (_id, gamepad) in self.gilrs.gamepads() {
+                blue |= gamepad.uuid() == BLUE_CONTROLLER_UUID;
+                green |= gamepad.uuid() == GREEN_CONTROLLER_UUID;
+            }
+            blue ^= input.current.x;
+            green ^= input.current.y;
         }
-        blue ^= input.current.x;
-        green ^= input.current.y;
 
         let mut fb = FrameBufferRect::new(&mut self.frame_buffer);
         let mut t = match self.menu_animation {
@@ -301,7 +310,7 @@ impl Shell {
 
             let new_brightness = self.brightness_slider.get();
             if new_brightness != old_brightness {
-                output.new_brightness = Some(new_brightness)
+                output.new_brightness = Some(new_brightness);
             }
         }
 

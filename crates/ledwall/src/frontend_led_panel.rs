@@ -9,10 +9,10 @@ pub fn main() {
 
     loop {
         // Take input
-        let input = shell.read_gilrs_input();
+        let (blue, green) = shell.read_gilrs_input();
 
         // Update state
-        let output = shell.update(input);
+        let output = shell.update(blue, green);
         if let Some(new_brightness) = output.new_brightness {
             (matrix, canvas) = init_matrix(new_brightness);
         }

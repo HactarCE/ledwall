@@ -6,7 +6,7 @@ mod constants;
 mod display;
 
 use crate::{
-    Activity, Buttons, FrameBufferRect, FullInput, StaticImage, Widget, draw_opt_animation,
+    Activity, FrameBufferRect, FullInput, StaticImage, Widget, draw_opt_animation,
     step_opt_animation,
 };
 use animations::*;
@@ -21,7 +21,6 @@ pub struct Tetris {
     lock_anim: Option<LockAnimation>,
 
     big: bool,
-    last_input: Buttons,
 }
 
 impl Default for Tetris {
@@ -41,7 +40,6 @@ impl Default for Tetris {
             lock_anim: None,
 
             big: false,
-            last_input: Buttons::default(),
         }
     }
 }
