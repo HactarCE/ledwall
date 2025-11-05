@@ -1,6 +1,8 @@
 # ledwall
 
-32x64 RGB LED wall that runs on a Raspberry Pi
+32x64 RGB LED wall driven by a Raspberry Pi
+
+[![Video thumbnail](http://img.youtube.com/vi/DotAwTRe5rU/0.jpg)](http://www.youtube.com/watch?v=DotAwTRe5rU "LED Panel Demo 1 - YouTube")
 
 ## Activities
 
