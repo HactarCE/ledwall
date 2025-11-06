@@ -115,7 +115,7 @@ impl Widget<FullInput> for Life {
         }
     }
 
-    fn draw(&mut self, fb: &mut crate::FrameBufferRect<'_>) {
+    fn draw(&self, fb: &mut crate::FrameBufferRect<'_>) {
         self.rainbow.draw(fb);
         fb.fill_with_fn(|[x, y], rainbow_color| get_color(self.cells[y][x], rainbow_color));
     }

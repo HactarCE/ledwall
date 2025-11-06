@@ -15,7 +15,7 @@ impl Widget<FullInput> for Rainbow {
         }
     }
 
-    fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
+    fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         let t = self.frame as f64 / FPS as f64 / DURATION as f64;
         fb.fill_with_fn(|[x, y], _| {
             let color = colorous::RAINBOW

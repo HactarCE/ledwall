@@ -16,6 +16,10 @@ impl Rgb {
         Rgb([r, g, b])
     }
 
+    pub fn to_oklab(self) -> oklab::Oklab {
+        oklab::srgb_to_oklab(self.0.into())
+    }
+
     /// Mixes two colors perceptually using Oklab color space.
     ///
     /// `t` is clamped between `0.0` and `1.0`.
@@ -28,8 +32,8 @@ impl Rgb {
             return other;
         }
 
-        let lab1 = oklab::srgb_to_oklab(self.0.into());
-        let lab2 = oklab::srgb_to_oklab(other.0.into());
+        let lab1 = self.to_oklab();
+        let lab2 = other.to_oklab();
 
         Self(
             oklab::Oklab {

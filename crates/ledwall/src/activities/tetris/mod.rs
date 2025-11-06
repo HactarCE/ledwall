@@ -15,6 +15,7 @@ use display::Transform;
 
 pub struct Tetris {
     game: tetris_logic::Game<u64>,
+    queue: [Option<Tetromino>; 4],
 
     clear_anim: Option<ClearAnimation>,
     hard_drop_anim: Option<HardDropAnimation>,
@@ -34,6 +35,7 @@ impl Default for Tetris {
                 0,
                 Box::new(rand::rngs::SmallRng::from_os_rng()),
             ),
+            queue: [None; 4],
 
             clear_anim: None,
             hard_drop_anim: None,
@@ -97,9 +99,12 @@ impl Widget<FullInput> for Tetris {
                 self.hard_drop_anim = Some(HardDropAnimation::new(trail_len, locked_piece));
             }
         }
+
+        let mut queue_iter = self.game.queue().next_pieces();
+        self.queue.fill_with(|| queue_iter.next());
     }
 
-    fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
+    fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         let width = self.game.config().width;
         let height = self.game.config().height;
 
@@ -160,7 +165,6 @@ impl Widget<FullInput> for Tetris {
             coordinates::HELD_PIECE.fill_border(fb, colors::HELD_PIECE_BORDER);
 
             // Draw next pieces
-            let queue = self.game.queue();
             for (i, transform) in [
                 coordinates::NEXT_PIECE,
                 coordinates::NEXT_PIECE_2,
@@ -170,8 +174,10 @@ impl Widget<FullInput> for Tetris {
             .into_iter()
             .enumerate()
             {
-                fill_piece_preview(transform, fb, queue.nth_next_piece(i));
-                transform.fill_border(fb, colors::NEXT_PIECE_BORDER);
+                if let Some(piece) = self.queue[i] {
+                    fill_piece_preview(transform, fb, piece);
+                    transform.fill_border(fb, colors::NEXT_PIECE_BORDER);
+                }
             }
         }
 

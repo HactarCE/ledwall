@@ -59,10 +59,11 @@ impl Widget<[bool; 2]> for Slider {
         if self.increment.update(increment && !decrement) {
             self.set(self.get().saturating_add(1));
         }
+
+        step_opt_animation(&mut self.flash);
     }
 
-    fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
-        step_opt_animation(&mut self.flash);
+    fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         let t = match &self.flash {
             Some(flash) => map_range(
                 flash.t() * TOTAL_ANIMATION_DURATION - FADE_START,
@@ -107,7 +108,7 @@ impl Widget<[bool; 2]> for LabeledSlider {
         self.slider.step(input);
     }
 
-    fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
+    fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         fb.fill(self.slider.color.darken(0.85));
         self.icon
             .draw_tinted(&mut fb.with_offset([1, 1]), self.slider.color);

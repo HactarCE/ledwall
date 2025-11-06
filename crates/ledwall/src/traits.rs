@@ -3,7 +3,7 @@ use crate::{FrameBufferRect, FullInput, StaticImage};
 pub trait Widget<I> {
     fn step(&mut self, _input: I) {}
 
-    fn draw(&mut self, fb: &mut FrameBufferRect<'_>);
+    fn draw(&self, fb: &mut FrameBufferRect<'_>);
 }
 
 pub trait Activity: Widget<FullInput> {
