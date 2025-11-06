@@ -17,9 +17,10 @@ pub struct Tetris {
     game: tetris_logic::Game<u64>,
     queue: [Option<Tetromino>; 4],
 
-    clear_anim: Option<ClearAnimation>,
+    soon_to_lock_anim: SoonToLockAnimation,
+    locked_anim: Option<LockedAnimation>,
     hard_drop_anim: Option<HardDropAnimation>,
-    lock_anim: Option<LockAnimation>,
+    clear_anim: Option<ClearAnimation>,
 
     big: bool,
 }
@@ -37,9 +38,10 @@ impl Default for Tetris {
             ),
             queue: [None; 4],
 
-            clear_anim: None,
+            soon_to_lock_anim: SoonToLockAnimation::default(),
+            locked_anim: None,
             hard_drop_anim: None,
-            lock_anim: None,
+            clear_anim: None,
 
             big: false,
         }
@@ -63,9 +65,10 @@ impl Widget<FullInput> for Tetris {
 
         self.big ^= keys_pressed.minus;
 
-        step_opt_animation(&mut self.clear_anim);
+        self.soon_to_lock_anim.step();
+        step_opt_animation(&mut self.locked_anim);
         step_opt_animation(&mut self.hard_drop_anim);
-        step_opt_animation(&mut self.lock_anim);
+        step_opt_animation(&mut self.clear_anim);
 
         if self.clear_anim.is_some() {
             return; // freeze game
@@ -90,7 +93,8 @@ impl Widget<FullInput> for Tetris {
                 self.clear_anim = Some(ClearAnimation::new(rows_cleared.clone()));
             }
             if let Some(locked_piece) = output.locked_piece {
-                self.lock_anim = Some(LockAnimation::new(locked_piece));
+                self.locked_anim = Some(LockedAnimation::new(locked_piece));
+                self.soon_to_lock_anim.reset();
             }
             if let Some(Ok(dropped_piece)) = output.hard_drop
                 && let Some(locked_piece) = output.locked_piece
@@ -98,6 +102,10 @@ impl Widget<FullInput> for Tetris {
                 let trail_len = dropped_piece.pos.y - locked_piece.pos.y;
                 self.hard_drop_anim = Some(HardDropAnimation::new(trail_len, locked_piece));
             }
+        }
+
+        if self.game.can_soft_drop() {
+            self.soon_to_lock_anim.reset();
         }
 
         let mut queue_iter = self.game.queue().next_pieces();
@@ -149,7 +157,7 @@ impl Widget<FullInput> for Tetris {
 
         // Draw falling piece
         for pos in falling_piece.coordinates() {
-            playfield.fill_block(fb, pos, falling_color);
+            playfield.fill_block(fb, pos, self.soon_to_lock_anim.modify_color(falling_color));
         }
 
         if !self.big {
@@ -182,7 +190,7 @@ impl Widget<FullInput> for Tetris {
         }
 
         // Draw locking animation
-        draw_opt_animation(&self.lock_anim, fb, playfield);
+        draw_opt_animation(&self.locked_anim, fb, playfield);
 
         // Draw hard drop animation
         draw_opt_animation(&self.hard_drop_anim, fb, playfield);

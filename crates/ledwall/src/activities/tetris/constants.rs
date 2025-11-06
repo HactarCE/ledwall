@@ -50,12 +50,16 @@ pub mod colors {
 }
 
 pub mod animations {
+    pub mod soon_to_lock {
+        pub const DURATION: f32 = 1.0; // seconds
+    }
+
     pub mod hard_drop {
         pub const DURATION: f32 = 0.375; // seconds
         pub const TRAIL_OPACITY: f32 = 0.5;
     }
 
-    pub mod lock {
+    pub mod locked {
         // should be shorter than `clear`
         pub const DURATION: f32 = 0.25; // seconds
     }

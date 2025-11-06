@@ -1,15 +1,45 @@
+use std::f32::consts::PI;
+
 use tetris_logic::{FallingPiece, Pos};
 
 use super::{Transform, colors, constants};
-use crate::{Animation, AnimationFrame, FPS, FrameBufferRect};
+use crate::{Animation, AnimationFrame, FPS, FrameBufferRect, Rgb};
+
+#[derive(Debug, Default)]
+pub struct SoonToLockAnimation {
+    frame: u32,
+}
+impl_animation_frame!(
+    SoonToLockAnimation,
+    constants::animations::soon_to_lock::DURATION
+);
+impl SoonToLockAnimation {
+    pub fn reset(&mut self) {
+        self.frame = 0;
+    }
+
+    pub fn step(&mut self) {
+        self.frame += 1;
+        if self.t() >= 1.0 {
+            self.reset();
+        }
+    }
+
+    pub fn modify_color(&self, color: Rgb) -> Rgb {
+        let sin = (self.t() * PI).sin();
+        // sin^2 smoothly varies from 0 to 1 and back
+        color.lighten(sin * sin)
+    }
+}
 
 /// Animation when a piece locks into place.
-pub struct LockAnimation {
+#[derive(Debug)]
+pub struct LockedAnimation {
     frame: u32,
     locked_piece: FallingPiece<u64>,
 }
-impl_animation_frame!(LockAnimation, constants::animations::lock::DURATION);
-impl LockAnimation {
+impl_animation_frame!(LockedAnimation, constants::animations::locked::DURATION);
+impl LockedAnimation {
     pub fn new(locked_piece: FallingPiece<u64>) -> Self {
         Self {
             frame: 0,
@@ -17,7 +47,7 @@ impl LockAnimation {
         }
     }
 }
-impl Animation<Transform> for LockAnimation {
+impl Animation<Transform> for LockedAnimation {
     fn draw(&self, fb: &mut FrameBufferRect<'_>, tf: Transform) {
         let t = self.t();
 
@@ -32,6 +62,7 @@ impl Animation<Transform> for LockAnimation {
 }
 
 /// Animation when hard-dropping a piece more than a few tiles.
+#[derive(Debug)]
 pub struct HardDropAnimation {
     frame: u32,
     trail_len: i8,
@@ -90,6 +121,7 @@ impl Animation<Transform> for HardDropAnimation {
 }
 
 /// Animation when clearing a row.
+#[derive(Debug)]
 pub struct ClearAnimation {
     frame: u32,
     rows: Vec<i8>,

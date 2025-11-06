@@ -166,6 +166,16 @@ impl<Time: GameTime> Game<Time> {
         self.hold_used
     }
 
+    pub fn can_soft_drop(&self) -> bool {
+        let mut new_falling_piece = self.falling_piece;
+        new_falling_piece.pos.y -= 1;
+        self.playfield.can_place_piece(
+            new_falling_piece.piece,
+            new_falling_piece.rot,
+            new_falling_piece.pos,
+        )
+    }
+
     /// Advances the game to the next frame.
     pub fn step(
         &mut self,
