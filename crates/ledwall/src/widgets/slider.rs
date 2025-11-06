@@ -1,7 +1,8 @@
 use std::ops::RangeInclusive;
 
 use crate::{
-    AnimationFrame, FrameBufferRect, KeyRepeat, Rgb, Widget, map_range, step_opt_animation,
+    AnimationFrame, FrameBufferRect, KeyRepeat, Rgb, StaticImage, WHITE, Widget, map_range,
+    step_opt_animation,
 };
 
 const BRIGHT_DURATION: f32 = 0.25;
@@ -90,3 +91,29 @@ struct FlashAnimation {
     frame: u32,
 }
 impl_animation_frame!(FlashAnimation, TOTAL_ANIMATION_DURATION);
+
+pub struct LabeledSlider {
+    pub slider: Slider,
+    pub icon: StaticImage,
+    pub overlay: StaticImage,
+}
+
+impl LabeledSlider {
+    pub const HEIGHT: usize = 9;
+}
+
+impl Widget<[bool; 2]> for LabeledSlider {
+    fn step(&mut self, input: [bool; 2]) {
+        self.slider.step(input);
+    }
+
+    fn draw(&mut self, fb: &mut FrameBufferRect<'_>) {
+        fb.fill(self.slider.color.darken(0.85));
+        self.icon
+            .draw_tinted(&mut fb.with_offset([1, 1]), self.slider.color);
+        self.overlay
+            .draw_tinted(&mut fb.with_offset([11, 1]), WHITE);
+        self.slider
+            .draw(&mut fb.with_offset([11, 6]).with_size([20, 2]));
+    }
+}

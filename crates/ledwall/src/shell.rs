@@ -15,6 +15,7 @@ const BLUE_CONTROLLER_UUID: [u8; 16] = [5, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 0
 #[cfg(feature = "gilrs")]
 const GREEN_CONTROLLER_UUID: [u8; 16] = [3, 0, 0, 0, 200, 45, 0, 0, 32, 144, 0, 0, 0, 1, 0, 0];
 
+const SHOW_VOLUME: bool = false;
 const VOLUME_COLOR: Rgb = Rgb::from_hex(0x69F657);
 const BRIGHTNESS_COLOR: Rgb = Rgb::from_hex(0xFFE400);
 
@@ -40,9 +41,9 @@ pub struct Shell {
     activity_reset_animation: Option<ActivityResetAnimation>,
 
     /// Volume on a scale from 0 to 20
-    volume_slider: widgets::Slider,
+    volume_slider: widgets::LabeledSlider,
     /// Brightness on a scale from 0 to 20
-    brightness_slider: widgets::Slider,
+    brightness_slider: widgets::LabeledSlider,
 
     in_menu: bool,
     menu_animation: Option<MenuAnimation>,
@@ -62,8 +63,16 @@ impl Default for Shell {
             current_activity: 0,
             activity_reset_animation: None,
 
-            volume_slider: widgets::Slider::new(DEFAULT_VOLUME, 0..=20, VOLUME_COLOR),
-            brightness_slider: widgets::Slider::new(DEFAULT_BRIGHTNESS, 1..=20, BRIGHTNESS_COLOR),
+            volume_slider: widgets::LabeledSlider {
+                slider: widgets::Slider::new(DEFAULT_VOLUME, 0..=20, VOLUME_COLOR),
+                icon: include_rgba_image!("volume.rgba"),
+                overlay: include_rgba_image!("l_r.rgba"),
+            },
+            brightness_slider: widgets::LabeledSlider {
+                slider: widgets::Slider::new(DEFAULT_BRIGHTNESS, 1..=20, BRIGHTNESS_COLOR),
+                icon: include_rgba_image!("brightness.rgba"),
+                overlay: include_rgba_image!("l2_r2.rgba"),
+            },
 
             in_menu: true,
             menu_animation: None,
@@ -253,18 +262,43 @@ impl Shell {
         include_rgba_image!("arrow_right.rgba")
             .draw(&mut upper.with_offset([26 + wiggle as isize, 3]));
 
-        let mut lower = fb.with_offset([0, (fb.height() as f32 / 2.0 * t) as isize]);
+        let mut y = fb.height() as isize + (fb.height() as f32 / 2.0 * t) as isize;
+        let slider_height = crate::widgets::LabeledSlider::HEIGHT;
 
-        // Border line
-        lower
-            .with_offset([0, 36])
-            .with_size([32, 1])
-            .fill(Rgb::from_hex(0x666666));
+        // Brightness slider
+        {
+            let old_brightness = self.brightness_slider.slider.get();
+
+            let input = [input.pressed().lt, input.pressed().rt];
+            self.brightness_slider.step(input);
+
+            y -= slider_height as isize;
+            self.brightness_slider
+                .draw(&mut fb.with_offset([0, y]).with_size([WIDTH, slider_height]));
+
+            let new_brightness = self.brightness_slider.slider.get();
+            if new_brightness != old_brightness {
+                output.new_brightness = Some(new_brightness);
+            }
+        }
+
+        // Volume slider
+        if SHOW_VOLUME {
+            let input = [input.pressed().l, input.pressed().r];
+            self.volume_slider.step(input);
+
+            y -= slider_height as isize;
+            self.volume_slider
+                .draw(&mut fb.with_offset([0, y]).with_size([WIDTH, slider_height]));
+        }
+
+        let controller_status_height = 9;
 
         // Controller status
         {
-            let mut fb = lower.with_offset([0, 37]);
-            let mut fb = fb.with_size([32, 9]);
+            y -= controller_status_height as isize;
+            let mut fb = fb.with_offset([0, y]);
+            let mut fb = fb.with_size([WIDTH, controller_status_height]);
             fb.fill(CONTROLLER_STATUS_BACKGROUND);
             let blue_darken = if blue {
                 0.0
@@ -291,39 +325,11 @@ impl Shell {
                 .draw_tinted(&mut fb.with_offset([17, 1]), WHITE.darken(green_darken));
         }
 
-        // Volume slider
-        {
-            let mut fb = lower.with_offset([0, 46]);
-            let mut fb = fb.with_size([32, 9]);
-            fb.fill(VOLUME_COLOR.darken(0.85));
-            include_rgba_image!("volume.rgba")
-                .draw_tinted(&mut fb.with_offset([1, 1]), VOLUME_COLOR);
-            include_rgba_image!("l_r.rgba").draw_tinted(&mut fb.with_offset([11, 1]), WHITE);
-            self.volume_slider
-                .step([input.pressed().l, input.pressed().r]);
-            self.volume_slider
-                .draw(&mut fb.with_offset([11, 6]).with_size([20, 2]));
-        }
-
-        // Brightness slider
-        {
-            let old_brightness = self.brightness_slider.get();
-
-            let mut fb = lower.with_offset([0, 55]);
-            fb.fill(BRIGHTNESS_COLOR.darken(0.85));
-            include_rgba_image!("brightness.rgba")
-                .draw_tinted(&mut fb.with_offset([1, 1]), BRIGHTNESS_COLOR);
-            include_rgba_image!("l2_r2.rgba").draw_tinted(&mut fb.with_offset([11, 1]), WHITE);
-            self.brightness_slider
-                .step([input.pressed().lt, input.pressed().rt]);
-            self.brightness_slider
-                .draw(&mut fb.with_offset([11, 6]).with_size([20, 2]));
-
-            let new_brightness = self.brightness_slider.get();
-            if new_brightness != old_brightness {
-                output.new_brightness = Some(new_brightness);
-            }
-        }
+        // Border line
+        y -= 1;
+        fb.with_offset([0, y])
+            .with_size([WIDTH, 1])
+            .fill(Rgb::from_hex(0x666666));
 
         output
     }
