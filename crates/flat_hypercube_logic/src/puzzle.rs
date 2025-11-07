@@ -87,6 +87,14 @@ impl Facet {
     pub fn has_sticker(self, sticker: Sticker) -> bool {
         self.has_pos(sticker.pos())
     }
+
+    #[must_use]
+    pub fn opposite(self) -> Self {
+        Self {
+            axis: self.axis,
+            sign: -self.sign,
+        }
+    }
 }
 
 impl fmt::Display for Facet {

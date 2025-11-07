@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use flat_hypercube_logic::{Facet, FloatPos4, Pos4, Turn};
 
 use crate::AnimationFrame;
@@ -54,6 +56,8 @@ impl TurnAnimation {
     }
 
     pub fn modify(&self, pos: Pos4) -> FloatPos4 {
+        let t = (-1.0 - (self.t() * PI).cos()) / 2.0; // -1 to 0
+
         let is_affected = match self.turn.facet {
             Some(facet) => facet.has_pos(pos),
             None => true,
@@ -61,7 +65,7 @@ impl TurnAnimation {
         let float_pos: FloatPos4 = pos.into();
         if is_affected {
             float_pos
-                .rot(self.turn.from, self.turn.to, self.t() - 1.0)
+                .rot(self.turn.from, self.turn.to, t)
                 .unwrap_or(float_pos)
         } else {
             float_pos

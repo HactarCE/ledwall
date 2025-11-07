@@ -41,4 +41,29 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
         self.contents[self.len as usize] = element;
         self.len += 1;
     }
+
+    pub fn try_push(&mut self, element: T) -> Result<(), ()> {
+        if (self.len as usize) < CAP {
+            self.push(element);
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn remove(&mut self, index: usize) {
+        assert!(index < self.len as usize);
+        self[index..].rotate_left(1);
+        self.len -= 1;
+    }
+}
+
+impl<T: Default, const CAP: usize> FromIterator<T> for ArrayVec<T, CAP> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut ret = Self::default();
+        for element in iter {
+            ret.push(element);
+        }
+        ret
+    }
 }

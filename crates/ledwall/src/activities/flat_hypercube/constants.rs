@@ -8,7 +8,7 @@ pub mod colors {
         Rgb::from_hex(0xFFFF00), // D yellow
         Rgb::from_hex(0x00FF33), // F green
         Rgb::from_hex(0x0099EE), // B blue
-        Rgb::from_hex(0xFF00FF), // O pink
+        Rgb::from_hex(0xFF2266), // O pink
         Rgb::from_hex(0x550088), // I purple
     ];
 
@@ -17,9 +17,14 @@ pub mod colors {
     pub const RED_FLASH: Rgb = Rgb::from_hex(0xFF0000);
 
     pub const DARKEN_UNGRIPPED: f32 = 0.5;
+    pub const DARKEN_HIDDEN: f32 = 0.5;
 
     pub const TIMER_RUNNING: Rgb = Rgb::from_hex(0x999999);
     pub const TIMER_DONE: Rgb = WHITE;
+
+    pub const FILTER_MUST_NOT_HAVE: Rgb = Rgb::from_hex(0x000000);
+    pub const FILTER_MAY_HAVE: Rgb = Rgb::from_hex(0x222222);
+    pub const FILTER_MUST_HAVE: Rgb = Rgb::from_hex(0x999999);
 }
 
 pub mod animations {
