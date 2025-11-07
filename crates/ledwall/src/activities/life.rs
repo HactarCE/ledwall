@@ -4,7 +4,7 @@ use rand::{Rng, SeedableRng};
 
 use crate::{Activity, BLACK, FPS, FullInput, HEIGHT, Rgb, WHITE, WIDTH, Widget};
 
-const TRAIL_BRIGHTNESS: f32 = 0.75;
+const TRAIL_BRIGHTNESS: f32 = 0.625;
 const TRAIL_LIMIT: u8 = 30;
 
 const FAST_RATE: usize = 1;
