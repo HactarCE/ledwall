@@ -28,12 +28,13 @@ pub async fn main() {
     texture.set_filter(FilterMode::Nearest);
 
     let mut show_fps = false;
+    let frame_duration: Duration = Duration::from_secs_f64(1.0 / FPS as f64);
 
     loop {
-        // Wait for next frame
-        let now = Instant::now();
-        std::thread::sleep(next_frame_time.saturating_duration_since(now));
-        next_frame_time = now + Duration::from_secs_f64(1.0 / FPS as f64);
+        next_frame_time += frame_duration;
+        if next_frame_time + frame_duration < Instant::now() {
+            next_frame_time = Instant::now();
+        }
 
         // Toggle FPS counter
         if is_key_pressed(KeyCode::F) {
@@ -78,28 +79,31 @@ pub async fn main() {
         // Update state
         shell.update(blue, green);
 
-        // Update display
-        rgb_to_rgba(&mut rgba_buffer, shell.frame_buffer());
-        texture.update_from_bytes(WIDTH as u32, HEIGHT as u32, &rgba_buffer);
-        draw_texture_ex(
-            &texture,
-            X_PADDING,
-            TOP_PADDING,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(
-                    WIDTH as f32 * SCALE_FACTOR,
-                    HEIGHT as f32 * SCALE_FACTOR,
-                )),
-                ..Default::default()
-            },
-        );
+        // Wait for next frame
+        while Instant::now() < next_frame_time {
+            // Update display
+            rgb_to_rgba(&mut rgba_buffer, shell.frame_buffer());
+            texture.update_from_bytes(WIDTH as u32, HEIGHT as u32, &rgba_buffer);
+            draw_texture_ex(
+                &texture,
+                X_PADDING,
+                TOP_PADDING,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(
+                        WIDTH as f32 * SCALE_FACTOR,
+                        HEIGHT as f32 * SCALE_FACTOR,
+                    )),
+                    ..Default::default()
+                },
+            );
 
-        if show_fps {
-            draw_fps();
+            if show_fps {
+                draw_fps();
+            }
+
+            next_frame().await;
         }
-
-        next_frame().await;
     }
 }
 
