@@ -4,6 +4,7 @@ mod image;
 mod animation;
 
 mod activities;
+mod array_vec;
 mod color;
 mod frame_buffer;
 mod input;
@@ -14,6 +15,7 @@ mod widgets;
 use std::ops::Range;
 
 pub use animation::{Animation, AnimationFrame, draw_opt_animation, step_opt_animation};
+pub use array_vec::ArrayVec;
 pub use color::*;
 pub use frame_buffer::{FrameBuffer, FrameBufferRect};
 pub use image::StaticImage;
@@ -55,4 +57,11 @@ pub fn map_range(parameter: f32, in_range: Range<f32>, out_range: Range<f32>) ->
 
 pub fn xy_is_in_frame([x, y]: [usize; 2]) -> bool {
     (0..crate::WIDTH).contains(&x) && (0..crate::HEIGHT).contains(&y)
+}
+
+/// Returns (sin(pi * t))^2, which varies smoothly from 0 to 1 and back as
+/// `t` varies from 0 to 1.
+pub fn smooth_sine(t: f32) -> f32 {
+    let sin = (t * std::f32::consts::PI).sin();
+    sin * sin
 }

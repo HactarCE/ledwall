@@ -1,9 +1,7 @@
-use std::f32::consts::PI;
-
 use tetris_logic::{FallingPiece, Pos};
 
 use super::{Transform, colors, constants};
-use crate::{Animation, AnimationFrame, FPS, FrameBufferRect, Rgb};
+use crate::{Animation, AnimationFrame, FPS, FrameBufferRect, Rgb, smooth_sine};
 
 #[derive(Debug, Default)]
 pub struct SoonToLockAnimation {
@@ -11,7 +9,7 @@ pub struct SoonToLockAnimation {
 }
 impl_animation_frame!(
     SoonToLockAnimation,
-    constants::animations::soon_to_lock::DURATION
+    constants::animations::soon_to_lock::DURATION,
 );
 impl SoonToLockAnimation {
     pub fn reset(&mut self) {
@@ -26,9 +24,7 @@ impl SoonToLockAnimation {
     }
 
     pub fn modify_color(&self, color: Rgb) -> Rgb {
-        let sin = (self.t() * PI).sin();
-        // sin^2 smoothly varies from 0 to 1 and back
-        color.lighten(sin * sin)
+        color.lighten(smooth_sine(self.t()))
     }
 }
 
@@ -70,7 +66,7 @@ pub struct HardDropAnimation {
 }
 impl_animation_frame!(
     HardDropAnimation,
-    constants::animations::hard_drop::DURATION
+    constants::animations::hard_drop::DURATION,
 );
 impl HardDropAnimation {
     pub fn new(trail_len: i8, end_piece: FallingPiece<u64>) -> Self {

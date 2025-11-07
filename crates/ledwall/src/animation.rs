@@ -1,7 +1,7 @@
 use crate::FrameBufferRect;
 
 macro_rules! impl_animation_frame {
-    ($ty:ty, $duration:expr) => {
+    ($ty:ty, $duration:expr $(,)?) => {
         impl $crate::animation::AnimationFrame for $ty {
             const DURATION: f32 = $duration;
 
@@ -34,11 +34,11 @@ pub trait Animation<D>: AnimationFrame {
     fn draw(&self, fb: &mut FrameBufferRect<'_>, data: D);
 }
 
-pub fn step_opt_animation(opt_anim: &mut Option<impl AnimationFrame>) {
+pub fn step_opt_animation<A: AnimationFrame>(opt_anim: &mut Option<A>) -> Option<A> {
     opt_anim.take_if(|anim| {
         *anim.frame_number_mut() += 1;
         anim.t() > 1.0
-    });
+    })
 }
 
 pub fn draw_opt_animation<D>(

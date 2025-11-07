@@ -45,9 +45,30 @@ impl Rgb {
             .into(),
         )
     }
-    // /// Mixes between `self` and `other` in an approximately perceptually
-    // /// uniform way, assuming `other` is much darker than `self`.
-    // pub fn mix_to_dark(self, other: Rgb, t: f32) -> Rgb {}
+
+    /// Mixes multiple colors perceptually and uniformly using Oklab color
+    /// space.
+    pub fn mix_multiple(colors: impl IntoIterator<Item = Rgb>) -> Rgb {
+        let [mut l, mut a, mut b] = [0.0, 0.0, 0.0];
+        let mut count = 0.0;
+        for color in colors {
+            let lab = color.to_oklab();
+            l += lab.l;
+            a += lab.a;
+            b += lab.b;
+            count += 1.0;
+        }
+
+        Self(
+            oklab::Oklab {
+                l: l / count,
+                a: a / count,
+                b: b / count,
+            }
+            .to_srgb()
+            .into(),
+        )
+    }
 
     pub fn lighten(self, t: f32) -> Rgb {
         self.mix(WHITE, t)

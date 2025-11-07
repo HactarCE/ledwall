@@ -13,6 +13,7 @@ default-run = "ledwall"
 workspace = true
 
 [dependencies]
+flat_hypercube_logic.workspace = true
 tetris_logic.workspace = true
 bytemuck = { version = "1.24.0", features = ["derive"] }
 colorous = "1.0.16"

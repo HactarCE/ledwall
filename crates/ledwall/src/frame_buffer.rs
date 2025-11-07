@@ -89,6 +89,12 @@ impl<'a> FrameBufferRect<'a> {
             .get_mut(usize::try_from(by + y as isize).ok()?)?
             .get_mut(usize::try_from(bx + x as isize).ok()?)
     }
+
+    pub fn set(&mut self, x: usize, y: usize, color: Rgb) {
+        if let Some(out) = self.get_mut(x, y) {
+            *out = color;
+        }
+    }
 }
 
 impl Index<[usize; 2]> for FrameBufferRect<'_> {
