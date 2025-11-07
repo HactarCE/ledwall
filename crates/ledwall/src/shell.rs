@@ -65,13 +65,13 @@ impl Default for Shell {
 
             volume_slider: widgets::LabeledSlider {
                 slider: widgets::Slider::new(DEFAULT_VOLUME, 0..=20, VOLUME_COLOR),
-                icon: include_rgba_image!("volume.rgba"),
-                overlay: include_rgba_image!("l_r.rgba"),
+                icon: include_rgba_image!("menu/volume.rgba"),
+                overlay: include_rgba_image!("menu/l_r.rgba"),
             },
             brightness_slider: widgets::LabeledSlider {
                 slider: widgets::Slider::new(DEFAULT_BRIGHTNESS, 1..=20, BRIGHTNESS_COLOR),
-                icon: include_rgba_image!("brightness.rgba"),
-                overlay: include_rgba_image!("l2_r2.rgba"),
+                icon: include_rgba_image!("menu/brightness.rgba"),
+                overlay: include_rgba_image!("menu/l2_r2.rgba"),
             },
 
             in_menu: true,
@@ -165,7 +165,7 @@ impl Shell {
         }
         if self.in_menu && pressed_keys.x {
             self.activities[self.current_activity].reset();
-            self.activity_reset_animation = Some(ActivityResetAnimation::new())
+            self.activity_reset_animation = Some(ActivityResetAnimation::new());
         }
         step_opt_animation(&mut self.menu_animation);
         step_opt_animation(&mut self.activity_reset_animation);
@@ -257,9 +257,9 @@ impl Shell {
             % (ARROW_WIGGLE_DURATION * NANOS_PER_SEC) as u128) as f32
             / NANOS_PER_SEC;
         let wiggle = t2 < ARROW_WIGGLE_DUTY_CYCLE;
-        include_rgba_image!("arrow_left.rgba")
+        include_rgba_image!("menu/arrow_left.rgba")
             .draw(&mut upper.with_offset([1 - wiggle as isize, 3]));
-        include_rgba_image!("arrow_right.rgba")
+        include_rgba_image!("menu/arrow_right.rgba")
             .draw(&mut upper.with_offset([26 + wiggle as isize, 3]));
 
         let mut y = fb.height() as isize + (fb.height() as f32 / 2.0 * t) as isize;
@@ -305,11 +305,11 @@ impl Shell {
             } else {
                 DARKEN_DISCONNECTED_CONTROLLER
             };
-            include_rgba_image!("controller.rgba").draw_tinted(
+            include_rgba_image!("menu/controller.rgba").draw_tinted(
                 &mut fb.with_offset([1, 1]),
                 BLUE_CONTROLLER_COLOR.darken(blue_darken),
             );
-            include_rgba_image!("controller_buttons.rgba")
+            include_rgba_image!("menu/controller_buttons.rgba")
                 .draw_tinted(&mut fb.with_offset([1, 1]), WHITE.darken(blue_darken));
 
             let green_darken = if green {
@@ -317,11 +317,11 @@ impl Shell {
             } else {
                 DARKEN_DISCONNECTED_CONTROLLER
             };
-            include_rgba_image!("controller.rgba").draw_tinted(
+            include_rgba_image!("menu/controller.rgba").draw_tinted(
                 &mut fb.with_offset([17, 1]),
                 GREEN_CONTROLLER_COLOR.darken(green_darken),
             );
-            include_rgba_image!("controller_buttons.rgba")
+            include_rgba_image!("menu/controller_buttons.rgba")
                 .draw_tinted(&mut fb.with_offset([17, 1]), WHITE.darken(green_darken));
         }
 

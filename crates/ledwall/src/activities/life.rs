@@ -50,7 +50,7 @@ impl Activity for Life {
     }
 
     fn menu_image(&self) -> crate::StaticImage {
-        include_rgba_image!("menu/life.rgba")
+        include_rgba_image!("activities/life.rgba")
     }
 }
 

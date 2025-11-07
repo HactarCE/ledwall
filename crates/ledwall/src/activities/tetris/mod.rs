@@ -54,7 +54,7 @@ impl Activity for Tetris {
     }
 
     fn menu_image(&self) -> StaticImage {
-        include_rgba_image!("menu/tetris.rgba")
+        include_rgba_image!("activities/tetris.rgba")
     }
 }
 

@@ -31,6 +31,6 @@ impl Activity for Rainbow {
     }
 
     fn menu_image(&self) -> crate::StaticImage {
-        include_rgba_image!("menu/rainbow.rgba")
+        include_rgba_image!("activities/rainbow.rgba")
     }
 }
