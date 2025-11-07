@@ -9,6 +9,7 @@ mod color;
 mod frame_buffer;
 mod input;
 mod shell;
+mod text;
 mod traits;
 mod widgets;
 

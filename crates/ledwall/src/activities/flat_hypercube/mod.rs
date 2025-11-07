@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use flat_hypercube_logic::{Facet, Piece, Pos4, Puzzle, Turn};
 use rand::SeedableRng;
 
@@ -19,6 +21,11 @@ pub struct FlatHypercube {
     redo_stack: Vec<Turn>,
     last_move: Option<Turn>,
 
+    is_scrambled: bool,
+    timer_start: Option<Instant>,
+    timer_end: Option<Instant>,
+    show_timer: bool,
+
     blink_anim: animations::BlinkAnimation,
     turn_anim: Option<animations::TurnAnimation>,
 }
@@ -27,6 +34,9 @@ impl FlatHypercube {
     fn do_turn_with_animation(&mut self, turn: Turn) {
         if self.puzzle.do_turn(turn) {
             self.turn_anim = Some(animations::TurnAnimation::new(turn));
+            if self.timer_start.is_some() && self.timer_end.is_none() && self.puzzle.is_solved() {
+                self.timer_end = Some(Instant::now());
+            }
         }
     }
 
@@ -70,14 +80,21 @@ impl Widget<FullInput> for FlatHypercube {
         let keys_down = input.any().current;
         let keys_pressed = input.any().pressed();
 
-        if keys_down.plus {
-            if keys_pressed.x {
-                self.reset();
-            }
+        if keys_down.minus && keys_pressed.x {
+            // Reset
+            self.reset();
+        } else if keys_down.minus && keys_pressed.y {
+            // Scramble
             if keys_pressed.y {
                 self.reset();
                 self.puzzle
                     .scramble(&mut rand::rngs::SmallRng::from_os_rng());
+                self.is_scrambled = true;
+            }
+        } else if keys_down.plus {
+            // Toggle timer
+            if keys_pressed.a {
+                self.show_timer ^= true;
             }
         } else {
             // Input turn
@@ -98,6 +115,10 @@ impl Widget<FullInput> for FlatHypercube {
                 self.undo_stack.push(turn);
                 self.redo_stack.clear();
                 self.last_move = Some(turn);
+
+                if self.is_scrambled && self.timer_start.is_none() && turn.facet.is_some() {
+                    self.timer_start = Some(Instant::now());
+                }
             }
         }
 
@@ -149,6 +170,7 @@ impl Widget<FullInput> for FlatHypercube {
         const MAX_OVERLAPS: usize = 3;
         let mut overlaps_buffer = [[ArrayVec::<u8, MAX_OVERLAPS>::new(); 32]; 32];
 
+        // Draw pieces and record stickers to `overlaps_buffer`
         for piece in Piece::iter_all() {
             let rotate_and_project = |pos: Pos4| {
                 // Rotate
@@ -186,6 +208,7 @@ impl Widget<FullInput> for FlatHypercube {
             }
         }
 
+        // Draw stickers
         for (fby, row) in overlaps_buffer.into_iter().enumerate() {
             for (fbx, overlaps) in row.into_iter().enumerate() {
                 if overlaps.is_empty() {
@@ -203,6 +226,30 @@ impl Widget<FullInput> for FlatHypercube {
                 }));
                 fb.set(fbx, fby, overlapping_colors);
             }
+        }
+
+        // Draw timer
+        if self.show_timer {
+            let timer_end = self.timer_end.unwrap_or_else(Instant::now);
+            let timer_start = self.timer_start.unwrap_or(timer_end);
+            let duration = timer_end.saturating_duration_since(timer_start);
+            let centis = duration.subsec_millis() / 10;
+            let seconds = duration.as_secs() % 60;
+            let minutes = duration.as_secs() / 60;
+            let text = format!("{minutes}:{seconds:02}.{centis:02}");
+            let text_width = crate::text::width(&text);
+            crate::text::draw(
+                &text,
+                &mut fb.with_offset([
+                    fb.width() as isize - text_width as isize - 1,
+                    fb.height() as isize - 6,
+                ]),
+                if self.timer_end.is_some() {
+                    constants::colors::TIMER_DONE
+                } else {
+                    constants::colors::TIMER_RUNNING
+                },
+            );
         }
     }
 }

@@ -272,7 +272,7 @@ impl Puzzle {
         self.stickers.as_chunks().0.try_into().unwrap()
     }
 
-    pub fn is_solved(self) -> bool {
+    pub fn is_solved(&self) -> bool {
         self.facets()
             .iter()
             .all(|stickers| stickers[1..].iter().all(|&sticker| sticker == stickers[0]))

@@ -17,6 +17,9 @@ pub mod colors {
     pub const RED_FLASH: Rgb = Rgb::from_hex(0xFF0000);
 
     pub const DARKEN_UNGRIPPED: f32 = 0.5;
+
+    pub const TIMER_RUNNING: Rgb = Rgb::from_hex(0x999999);
+    pub const TIMER_DONE: Rgb = WHITE;
 }
 
 pub mod animations {
