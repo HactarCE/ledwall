@@ -88,7 +88,7 @@ impl Widget<FullInput> for FlatHypercube {
         let any_modifiers = keys_down.lt || keys_down.rt || keys_down.plus;
 
         // Temporarily disable filters
-        self.enable_filters ^= self.editing_filters.is_some() || !(keys_down.plus && keys_down.b);
+        self.enable_filters = self.editing_filters.is_some() || !(keys_down.plus && keys_down.b);
 
         if keys_down.lt || keys_down.rt {
             // Reset
@@ -98,12 +98,10 @@ impl Widget<FullInput> for FlatHypercube {
 
             // Scramble
             if keys_pressed.y {
-                if keys_pressed.y {
-                    self.reset();
-                    self.puzzle
-                        .scramble(&mut rand::rngs::SmallRng::from_os_rng());
-                    self.was_scrambled = true;
-                }
+                self.reset();
+                self.puzzle
+                    .scramble(&mut rand::rngs::SmallRng::from_os_rng());
+                self.was_scrambled = true;
             }
         }
 
@@ -380,30 +378,19 @@ impl Widget<FullInput> for FlatHypercube {
             let rule = self.filters.rules[editing_filters.index];
 
             draw_compass(22, 6, &mut fb, |facet, [dx, dy]| {
-                let sticker_color =
-                    colors::STICKERS[self.puzzle[facet.center_sticker()].id() as usize];
-                let bit = 1 << facet.id();
-                if rule.must_have & bit != 0 {
-                    // must have
-                    if dx != 1 || dy != 1 {
-                        sticker_color
-                    } else {
-                        BLACK
-                    }
+                let sticker_color = self.puzzle[facet.center_sticker()].id();
+                let bit = 1 << sticker_color;
+                let visible = if rule.must_have & bit != 0 {
+                    dx != 1 || dy != 1 // must have -> O
                 } else if rule.must_not_have & bit != 0 {
-                    // must not have
-                    if (dx == 1) == (dy == 1) {
-                        sticker_color
-                    } else {
-                        BLACK
-                    }
+                    (dx == 1) == (dy == 1) // must not have -> X
                 } else {
-                    // may have
-                    if dx == 1 && dy == 1 {
-                        sticker_color
-                    } else {
-                        BLACK
-                    }
+                    dx == 1 && dy == 1 // may have -> ·
+                };
+                if visible {
+                    colors::STICKERS[sticker_color as usize]
+                } else {
+                    BLACK
                 }
             });
         }

@@ -3,10 +3,10 @@ pub mod colors {
 
     pub const STICKERS: [Rgb; 8] = [
         Rgb::from_hex(0xFF0808), // R red
-        Rgb::from_hex(0xCC3300), // L orange
+        Rgb::from_hex(0xCC5500), // L orange
         Rgb::from_hex(0xFFFFFF), // U white
         Rgb::from_hex(0xFFFF00), // D yellow
-        Rgb::from_hex(0x00FF33), // F green
+        Rgb::from_hex(0x33CC33), // F green
         Rgb::from_hex(0x0099EE), // B blue
         Rgb::from_hex(0xFF2266), // O pink
         Rgb::from_hex(0x550088), // I purple
