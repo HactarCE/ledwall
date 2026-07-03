@@ -1,0 +1,98 @@
+name: Build
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+env:
+    CARGO_TERM_COLOR: always
+
+jobs:
+    windows:
+        name: Build Windows latest
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cargo/registry
+                      ~/.cargo/git
+                      target
+                  key: ${{ runner.os }}-cargo
+            - uses: dtolnay/rust-toolchain@stable
+            - name: Build ledwall
+              run: cargo build --release
+            - name: Upload release
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ledwall_win64
+                  path: target/release/ledwall.exe
+
+    linux:
+        name: Build Linux latest
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cargo/registry
+                      ~/.cargo/git
+                      target
+                  key: ${{ runner.os }}-cargo
+            - uses: dtolnay/rust-toolchain@stable
+            - name: Update apt
+              run: sudo apt update
+            - name: Install egui dependencies
+              run: sudo apt install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
+            - name: Install Rusty File Dialog dependencies
+              run: sudo apt install libgtk-3-dev
+            - name: Install XKB/XCB dev dependencies
+              run: sudo apt install libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libxcb-xinput-dev
+            - name: Build ledwall
+              run: cargo build --release
+            - name: Make tarball
+              run: tar -czf ledwall_linux.tar.gz -C target/release ledwall
+            - name: Upload release
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ledwall_linux
+                  path: ledwall_linux.tar.gz
+
+    macos:
+        name: Build macOS latest
+        runs-on: macos-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cargo/registry
+                      ~/.cargo/git
+                      target
+                  key: ${{ runner.os }}-cargo
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: x86_64-apple-darwin
+            - name: Install cargo-bundle
+              uses: baptiste0928/cargo-install@v3
+              with:
+                  crate: cargo-bundle
+                  version: latest
+            - name: Build ledwall (arm64)
+              run: cargo build --release
+            - name: Build ledwall (x86_64)
+              run: cargo build --release --target=x86_64-apple-darwin
+            - name: Merge universal binary
+              run: lipo -create -output target/release/ledwall target/x86_64-apple-darwin/release/ledwall target/release/ledwall
+            - name: Make app
+              run: CARGO_BUNDLE_SKIP_BUILD= cargo bundle --release --package ledwall
+            - name: Make tarball
+              run: tar -czf ledwall_macos.tar.gz -C target/release/bundle/osx "ledwall.app"
+            - name: Upload app
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ledwall_macos
+                  path: ledwall_macos.tar.gz
