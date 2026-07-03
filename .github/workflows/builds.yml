@@ -47,8 +47,8 @@ jobs:
               run: sudo apt update
             - name: Install egui dependencies
               run: sudo apt install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
-            - name: Install Rusty File Dialog dependencies
-              run: sudo apt install libgtk-3-dev
+            - name: Install libudev
+              run: sudo apt install libudev-dev
             - name: Install XKB/XCB dev dependencies
               run: sudo apt install libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libxcb-xinput-dev
             - name: Build ledwall
