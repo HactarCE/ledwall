@@ -9,27 +9,6 @@ env:
     CARGO_TERM_COLOR: always
 
 jobs:
-    windows:
-        name: Build Windows latest
-        runs-on: windows-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cargo/registry
-                      ~/.cargo/git
-                      target
-                  key: ${{ runner.os }}-cargo
-            - uses: dtolnay/rust-toolchain@stable
-            - name: Build ledwall
-              run: cargo build --release
-            - name: Upload release
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ledwall_win64
-                  path: target/release/ledwall.exe
-
     linux:
         name: Build Linux latest
         runs-on: ubuntu-24.04
@@ -51,6 +30,8 @@ jobs:
               run: sudo apt install libudev-dev
             - name: Install XKB/XCB dev dependencies
               run: sudo apt install libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libxcb-xinput-dev
+            - name: Process images
+              run: sh reprocess_images.sh
             - name: Build ledwall
               run: cargo build --release
             - name: Make tarball
@@ -81,6 +62,8 @@ jobs:
               with:
                   crate: cargo-bundle
                   version: latest
+            - name: Process images
+              run: sh reprocess_images.sh
             - name: Build ledwall (arm64)
               run: cargo build --release
             - name: Build ledwall (x86_64)
