@@ -46,6 +46,7 @@ pub struct Shell {
     brightness_slider: widgets::LabeledSlider,
 
     in_menu: bool,
+    sleeping: bool,
     menu_animation: Option<MenuAnimation>,
 }
 impl Default for Shell {
@@ -75,6 +76,7 @@ impl Default for Shell {
             },
 
             in_menu: true,
+            sleeping: true,
             menu_animation: None,
         }
     }
@@ -151,11 +153,23 @@ impl Shell {
         };
 
         if blue.is_none() && green.is_none() {
-            self.frame_buffer.as_flattened_mut().fill(BLACK);
-            self.current_activity = 0;
-            self.in_menu = false;
-            self.menu_animation = None;
-            return ShellFrameOutput::default();
+            if !self.sleeping && self.activities[self.current_activity].stay_awake() {
+                if self.in_menu {
+                    self.toggle_menu();
+                }
+            } else {
+                // Sleep when controllers are disconnected
+                self.frame_buffer.as_flattened_mut().fill(BLACK);
+                self.current_activity = 0;
+                self.sleeping = true;
+                self.in_menu = true;
+                self.menu_animation = None;
+            }
+            if self.sleeping {
+                return ShellFrameOutput::default();
+            }
+        } else {
+            self.sleeping = false;
         }
 
         let pressed_keys = full_input.any().pressed();

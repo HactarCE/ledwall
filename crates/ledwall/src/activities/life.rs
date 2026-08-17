@@ -52,6 +52,10 @@ impl Activity for Life {
     fn menu_image(&self) -> crate::StaticImage {
         include_rgba_image!("activities/life.rgba")
     }
+
+    fn stay_awake(&self) -> bool {
+        true
+    }
 }
 
 impl Widget<FullInput> for Life {
