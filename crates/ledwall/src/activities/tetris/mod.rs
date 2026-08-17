@@ -1,4 +1,3 @@
-use rand::SeedableRng;
 use tetris_logic::{FrameInput, Pos, Tetromino};
 
 mod animations;
@@ -34,7 +33,7 @@ impl Default for Tetris {
                     ..Default::default()
                 },
                 0,
-                Box::new(rand::rngs::SmallRng::from_os_rng()),
+                Box::new(rand::make_rng::<rand::rngs::SmallRng>()),
             ),
             queue: [None; 4],
 

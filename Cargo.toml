@@ -44,4 +44,4 @@ opt-level = 1
 [workspace.dependencies]
 flat_hypercube_logic = { path = "crates/flat_hypercube_logic" }
 tetris_logic = { path = "crates/tetris_logic" }
-rand = { version = "0.9.2", default-features = false }
+rand = { version = "0.10.2", default-features = false }

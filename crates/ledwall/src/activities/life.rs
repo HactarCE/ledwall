@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use rand::{Rng, SeedableRng};
+use rand::RngExt;
 
 use crate::{Activity, BLACK, FPS, FullInput, HEIGHT, Rgb, WHITE, WIDTH, Widget};
 
@@ -137,7 +137,7 @@ impl Life {
     }
     fn reset_random(&mut self) {
         self.history.clear();
-        self.cells = rand::rngs::SmallRng::from_os_rng()
+        self.cells = rand::make_rng::<rand::rngs::SmallRng>()
             .random::<[[bool; WIDTH]; HEIGHT]>()
             .map(|row| row.map(|cell| cell as u8));
         self.reset_timer = Some(0);

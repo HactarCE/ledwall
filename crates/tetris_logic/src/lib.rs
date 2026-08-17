@@ -2,8 +2,7 @@
 //!
 //! Although the [Tetris wiki](https://tetris.wiki/) uses 1-indexed coordinates,
 //! this crate uses 0-indexed coordinates.
-
-use rand::RngCore;
+use rand::Rng;
 
 mod config;
 mod error;
@@ -58,7 +57,7 @@ pub struct Game<Time: GameTime = DefaultTime> {
 }
 
 impl<Time: GameTime> Game<Time> {
-    pub fn new(config: Config<Time>, first_frame: Time, rng: Box<dyn RngCore>) -> Self {
+    pub fn new(config: Config<Time>, first_frame: Time, rng: Box<dyn Rng>) -> Self {
         let mut ret = Self {
             config,
             playfield: Playfield::new(config.width, config.height + config.buffer_height),

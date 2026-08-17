@@ -1,6 +1,7 @@
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
+use rand::RngExt;
 use rand::distr::{Distribution, StandardUniform};
 use rand::{Rng, seq::IndexedRandom};
 
@@ -122,7 +123,7 @@ impl fmt::Display for Turn {
 
 impl Distribution<Turn> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Turn {
-        let [ax1, ax2, ax3] = Axis::ALL.choose_multiple_array(rng).unwrap();
+        let [ax1, ax2, ax3] = Axis::ALL.sample_array(rng).unwrap();
         Turn {
             facet: Some(Facet {
                 axis: ax1,

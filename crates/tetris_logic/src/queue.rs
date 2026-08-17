@@ -1,17 +1,17 @@
 use std::collections::VecDeque;
 
-use rand::RngCore;
+use rand::Rng;
 use rand::seq::SliceRandom;
 
 use crate::Tetromino;
 
 pub struct Queue {
     queue: VecDeque<Tetromino>,
-    rng: Box<dyn RngCore>,
+    rng: Box<dyn Rng>,
 }
 
 impl Queue {
-    pub fn new(rng: Box<dyn RngCore>) -> Self {
+    pub fn new(rng: Box<dyn Rng>) -> Self {
         Self {
             queue: VecDeque::new(),
             rng,

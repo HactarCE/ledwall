@@ -1,7 +1,6 @@
 use std::time::Instant;
 
 use flat_hypercube_logic::{Facet, Piece, Pos4, Puzzle, Turn};
-use rand::SeedableRng;
 
 mod animations;
 mod constants;
@@ -100,7 +99,7 @@ impl Widget<FullInput> for FlatHypercube {
             if keys_pressed.y {
                 self.reset();
                 self.puzzle
-                    .scramble(&mut rand::rngs::SmallRng::from_os_rng());
+                    .scramble(&mut rand::make_rng::<rand::rngs::SmallRng>());
                 self.was_scrambled = true;
             }
         }
