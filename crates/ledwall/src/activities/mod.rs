@@ -1,6 +1,7 @@
 use crate::Activity;
 
 pub mod flat_hypercube;
+pub mod input_test;
 pub mod life;
 pub mod rainbow;
 pub mod tetris;
@@ -11,5 +12,6 @@ pub fn init_activities() -> Vec<Box<dyn Activity>> {
         Box::new(tetris::Tetris::default()),
         Box::new(life::Life::default()),
         Box::new(flat_hypercube::FlatHypercube::default()),
+        Box::new(input_test::InputTest::default()),
     ]
 }
