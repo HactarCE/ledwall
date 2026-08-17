@@ -7,9 +7,9 @@ pub mod colors {
         Rgb::from_hex(0xFFFFFF), // U white
         Rgb::from_hex(0xFFFF00), // D yellow
         Rgb::from_hex(0x33CC33), // F green
-        Rgb::from_hex(0x0099EE), // B blue
+        Rgb::from_hex(0x0099FF), // B blue
         Rgb::from_hex(0xFF2266), // O pink
-        Rgb::from_hex(0x550088), // I purple
+        Rgb::from_hex(0x660066), // I purple
     ];
 
     pub const INTERNALS: Rgb = Rgb::from_hex(0x111111);
