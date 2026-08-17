@@ -1,7 +1,7 @@
 use crate::{
     Activity, AnimationFrame, BLACK, Buttons, ControllerInput, DEFAULT_BRIGHTNESS, DEFAULT_VOLUME,
-    FrameBuffer, FrameBufferRect, FullInput, HEIGHT, Rgb, WHITE, WIDTH, Widget, activities,
-    map_range, step_opt_animation, widgets,
+    FrameBuffer, FrameBufferRect, FullInput, HEIGHT, ReversibleAnimationFrame, Rgb, WHITE, WIDTH,
+    Widget, activities, map_range, step_opt_animation, widgets,
 };
 
 const CONTROLLER_STATUS_BACKGROUND: Rgb = BLACK;
@@ -48,6 +48,7 @@ pub struct Shell {
     in_menu: bool,
     sleeping: bool,
     menu_animation: Option<MenuAnimation>,
+    sleep_animation: Option<SleepAnimation>,
 }
 impl Default for Shell {
     fn default() -> Self {
@@ -75,9 +76,10 @@ impl Default for Shell {
                 overlay: include_rgba_image!("menu/l2_r2.rgba"),
             },
 
-            in_menu: true,
-            sleeping: true,
+            in_menu: false,
+            sleeping: false,
             menu_animation: None,
+            sleep_animation: Some(SleepAnimation::new()),
         }
     }
 }
@@ -157,19 +159,16 @@ impl Shell {
                 if self.in_menu {
                     self.toggle_menu();
                 }
-            } else {
+            } else if !self.sleeping {
                 // Sleep when controllers are disconnected
-                self.frame_buffer.as_flattened_mut().fill(BLACK);
-                self.current_activity = 0;
-                self.sleeping = true;
-                self.in_menu = true;
-                self.menu_animation = None;
+                self.toggle_sleep();
             }
-            if self.sleeping {
+
+            if self.sleeping && self.sleep_animation.is_none() {
                 return ShellFrameOutput::default();
             }
-        } else {
-            self.sleeping = false;
+        } else if self.sleeping {
+            self.toggle_sleep();
         }
 
         let pressed_keys = full_input.any().pressed();
@@ -202,15 +201,29 @@ impl Shell {
         fb.fill(BLACK);
 
         let activity = &mut self.activities[self.current_activity];
-        if !self.in_menu && self.menu_animation.is_none() {
+        if !self.in_menu && !self.sleeping && self.menu_animation.is_none() {
             activity.step(full_input);
         }
         activity.draw(&mut fb);
-        if self.in_menu || self.menu_animation.is_some() {
+        let ret = if self.in_menu || self.menu_animation.is_some() {
             self.step_and_draw_menu(full_input.any())
         } else {
             ShellFrameOutput::default()
+        };
+
+        step_opt_animation(&mut self.sleep_animation);
+        if let Some(a) = &self.sleep_animation {
+            let t = if self.sleeping { a.t() } else { 1.0 - a.t() };
+            FrameBufferRect::new(&mut self.frame_buffer).fill_with_fn(|_, color| color.darken(t));
+        } else if self.sleeping {
+            // Resest activity when sleeping
+            self.frame_buffer.as_flattened_mut().fill(BLACK);
+            self.current_activity = 0;
+            self.in_menu = true;
+            self.menu_animation = None;
         }
+
+        ret
     }
 
     pub fn toggle_menu(&mut self) {
@@ -218,6 +231,13 @@ impl Shell {
         self.menu_animation = Some(match self.menu_animation {
             Some(a) => a.reverse(),
             None => MenuAnimation::new(),
+        });
+    }
+    pub fn toggle_sleep(&mut self) {
+        self.in_menu ^= true;
+        self.sleep_animation = Some(match self.sleep_animation {
+            Some(a) => a.reverse(),
+            None => SleepAnimation::new(),
         });
     }
 
@@ -351,34 +371,37 @@ impl Shell {
 
 const ARROW_WIGGLE_DURATION: f32 = 2.0;
 const ARROW_WIGGLE_DUTY_CYCLE: f32 = 0.25;
-const MENU_ANIMATION_DURATION: f32 = 0.25;
 
 #[derive(Debug, Default, Copy, Clone)]
 struct MenuAnimation {
     frame: u32,
 }
-impl_animation_frame!(MenuAnimation, MENU_ANIMATION_DURATION);
+impl_animation_frame!(MenuAnimation, 0.25);
+impl ReversibleAnimationFrame for MenuAnimation {}
 impl MenuAnimation {
     pub fn new() -> Self {
         Self { frame: 0 }
     }
-
-    pub fn reverse(self) -> Self {
-        let frame_count = (MENU_ANIMATION_DURATION * crate::FPS as f32) as u32;
-        Self {
-            frame: frame_count.saturating_sub(self.frame),
-        }
-    }
 }
-
-const ACTIVITY_RESET_ANIMATION_DURATION: f32 = 1.0;
 
 #[derive(Debug, Default, Copy, Clone)]
 struct ActivityResetAnimation {
     frame: u32,
 }
-impl_animation_frame!(ActivityResetAnimation, ACTIVITY_RESET_ANIMATION_DURATION);
+impl_animation_frame!(ActivityResetAnimation, 1.0);
 impl ActivityResetAnimation {
+    pub fn new() -> Self {
+        Self { frame: 0 }
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone)]
+struct SleepAnimation {
+    frame: u32,
+}
+impl_animation_frame!(SleepAnimation, 1.0);
+impl ReversibleAnimationFrame for SleepAnimation {}
+impl SleepAnimation {
     pub fn new() -> Self {
         Self { frame: 0 }
     }

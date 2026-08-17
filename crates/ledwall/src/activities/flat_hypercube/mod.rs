@@ -403,9 +403,10 @@ impl Widget<FullInput> for FlatHypercube {
             let seconds = duration.as_secs() % 60;
             let minutes = duration.as_secs() / 60;
             let text = format!("{minutes}:{seconds:02}.{centis:02}");
-            let text_width = crate::text::width(&text);
+            let text_width = crate::text::width(&text, crate::text::FONT_5PX);
             crate::text::draw(
                 &text,
+                crate::text::FONT_5PX,
                 &mut fb.with_offset([
                     fb.width() as isize - text_width as isize - 1,
                     fb.height() as isize - 6,

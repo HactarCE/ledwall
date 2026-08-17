@@ -15,7 +15,9 @@ mod widgets;
 
 use std::ops::Range;
 
-pub use animation::{Animation, AnimationFrame, draw_opt_animation, step_opt_animation};
+pub use animation::{
+    Animation, AnimationFrame, ReversibleAnimationFrame, draw_opt_animation, step_opt_animation,
+};
 pub use array_vec::ArrayVec;
 pub use color::*;
 pub use frame_buffer::{FrameBuffer, FrameBufferRect};

@@ -19,6 +19,9 @@ pub trait AnimationFrame {
     /// Animation duration in seconds.
     const DURATION: f32;
 
+    /// Animation duration in frames.
+    const FRAME_COUNT: u32 = (Self::DURATION * crate::FPS as f32) as u32;
+
     /// Returns the frame number of the animation.
     fn frame_number(&self) -> u32;
     /// Returns a mutable reference to the frame number of the animation.
@@ -48,5 +51,13 @@ pub fn draw_opt_animation<D>(
 ) {
     if let Some(anim) = opt_anim {
         anim.draw(fb, data);
+    }
+}
+
+pub trait ReversibleAnimationFrame: Sized + AnimationFrame {
+    #[must_use]
+    fn reverse(mut self) -> Self {
+        *self.frame_number_mut() = Self::FRAME_COUNT.saturating_sub(self.frame_number());
+        self
     }
 }
