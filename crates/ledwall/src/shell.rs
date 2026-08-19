@@ -1,7 +1,8 @@
 use crate::{
-    Activity, AnimationFrame, BLACK, Buttons, ControllerInput, DEFAULT_BRIGHTNESS, DEFAULT_VOLUME,
-    FrameBuffer, FrameBufferRect, FullInput, HEIGHT, ReversibleAnimationFrame, Rgb, WHITE, WIDTH,
-    Widget, activities, map_range, step_opt_animation, widgets,
+    Activity, AnimationFrame, BLACK, BlendFn, Buttons, ControllerInput, DEFAULT_BRIGHTNESS,
+    DEFAULT_VOLUME, Darken, FrameBuffer, FrameBufferRect, FullInput, HEIGHT,
+    ReversibleAnimationFrame, Rgb, WHITE, WIDTH, Widget, activities, map_range, step_opt_animation,
+    widgets,
 };
 
 const CONTROLLER_STATUS_BACKGROUND: Rgb = BLACK;
@@ -214,7 +215,7 @@ impl Shell {
         step_opt_animation(&mut self.sleep_animation);
         if let Some(a) = &self.sleep_animation {
             let t = if self.sleeping { a.t() } else { 1.0 - a.t() };
-            FrameBufferRect::new(&mut self.frame_buffer).fill_with_fn(|_, color| color.darken(t));
+            FrameBufferRect::new(&mut self.frame_buffer).fill(Darken(t));
         } else if self.sleeping {
             // Resest activity when sleeping
             self.frame_buffer.as_flattened_mut().fill(BLACK);
@@ -267,7 +268,7 @@ impl Shell {
         t *= t;
 
         // Dim background
-        fb.fill_with_fn(|_, color| color.darken(BACKGROUND_DIM * (1.0 - t)));
+        fb.fill(Darken(BACKGROUND_DIM * (1.0 - t)));
 
         let mut upper = fb.with_offset([0, (fb.height() as f32 / 2.0 * -t) as isize]);
 
@@ -276,14 +277,15 @@ impl Shell {
             Some(anim) => map_range(anim.t(), 0.5..1.0, 0.5..0.0),
             None => 0.0,
         };
-        self.activities[self.current_activity]
-            .menu_image()
-            .draw_with_custom_blend(&mut upper, |c1, c2, alpha| {
+        self.activities[self.current_activity].menu_image().draw(
+            &mut upper,
+            BlendFn(|_, c1, c2, alpha| {
                 c1.mix(
                     c2.darken(darken),
                     (alpha as f32 / 255.0) * map_range(t, 0.0..0.125, 1.0..0.0),
                 )
-            });
+            }),
+        );
 
         // Activity selection arrows
         const NANOS_PER_SEC: f32 = 1_000_000_000 as f32;
@@ -292,9 +294,9 @@ impl Shell {
             / NANOS_PER_SEC;
         let wiggle = t2 < ARROW_WIGGLE_DUTY_CYCLE;
         include_rgba_image!("menu/arrow_left.rgba")
-            .draw(&mut upper.with_offset([1 - wiggle as isize, 3]));
+            .draw(&mut upper.with_offset([1 - wiggle as isize, 3]), ());
         include_rgba_image!("menu/arrow_right.rgba")
-            .draw(&mut upper.with_offset([26 + wiggle as isize, 3]));
+            .draw(&mut upper.with_offset([26 + wiggle as isize, 3]), ());
 
         let mut y = fb.height() as isize + (fb.height() as f32 / 2.0 * t) as isize;
         let slider_height = crate::widgets::LabeledSlider::HEIGHT;
@@ -339,24 +341,24 @@ impl Shell {
             } else {
                 DARKEN_DISCONNECTED_CONTROLLER
             };
-            include_rgba_image!("menu/controller.rgba").draw_tinted(
+            include_rgba_image!("menu/controller.rgba").draw(
                 &mut fb.with_offset([1, 1]),
                 BLUE_CONTROLLER_COLOR.darken(blue_darken),
             );
             include_rgba_image!("menu/controller_buttons.rgba")
-                .draw_tinted(&mut fb.with_offset([1, 1]), WHITE.darken(blue_darken));
+                .draw(&mut fb.with_offset([1, 1]), WHITE.darken(blue_darken));
 
             let green_darken = if green {
                 0.0
             } else {
                 DARKEN_DISCONNECTED_CONTROLLER
             };
-            include_rgba_image!("menu/controller.rgba").draw_tinted(
+            include_rgba_image!("menu/controller.rgba").draw(
                 &mut fb.with_offset([17, 1]),
                 GREEN_CONTROLLER_COLOR.darken(green_darken),
             );
             include_rgba_image!("menu/controller_buttons.rgba")
-                .draw_tinted(&mut fb.with_offset([17, 1]), WHITE.darken(green_darken));
+                .draw(&mut fb.with_offset([17, 1]), WHITE.darken(green_darken));
         }
 
         // Border line

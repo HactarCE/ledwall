@@ -77,3 +77,9 @@ impl Rgb {
         self.mix(BLACK, t)
     }
 }
+
+impl From<colorous::Color> for Rgb {
+    fn from(value: colorous::Color) -> Self {
+        Rgb(value.as_array().map(|x| x))
+    }
+}

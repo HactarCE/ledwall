@@ -7,8 +7,8 @@ mod constants;
 mod input;
 
 use crate::{
-    Activity, AnimationFrame, ArrayVec, BLACK, FrameBufferRect, FullInput, Rgb, WHITE, Widget,
-    step_opt_animation,
+    Activity, AnimationFrame, ArrayVec, BLACK, FONT_5PX, FrameBufferRect, FullInput, Rgb, Text,
+    WHITE, Widget, step_opt_animation,
 };
 
 #[derive(Debug, Default)]
@@ -402,21 +402,17 @@ impl Widget<FullInput> for FlatHypercube {
             let centis = duration.subsec_millis() / 10;
             let seconds = duration.as_secs() % 60;
             let minutes = duration.as_secs() / 60;
-            let text = format!("{minutes}:{seconds:02}.{centis:02}");
-            let text_width = crate::text::width(&text, crate::text::FONT_5PX);
-            crate::text::draw(
-                &text,
-                crate::text::FONT_5PX,
-                &mut fb.with_offset([
-                    fb.width() as isize - text_width as isize - 1,
-                    fb.height() as isize - 6,
-                ]),
-                if self.timer_end.is_some() {
-                    colors::TIMER_DONE
-                } else {
-                    colors::TIMER_RUNNING
-                },
-            );
+            let timer_string = format!("{minutes}:{seconds:02}.{centis:02}");
+            let timer_color = if self.timer_end.is_some() {
+                colors::TIMER_DONE
+            } else {
+                colors::TIMER_RUNNING
+            };
+            let text = Text::new(timer_string, FONT_5PX, timer_color);
+            text.draw(&mut fb.with_offset([
+                fb.width() as isize - text.width() as isize - 1,
+                fb.height() as isize - 6,
+            ]));
         }
     }
 }

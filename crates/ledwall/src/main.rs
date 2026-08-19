@@ -24,7 +24,8 @@ pub use frame_buffer::{FrameBuffer, FrameBufferRect};
 pub use image::StaticImage;
 pub use input::{Buttons, ControllerInput, FullInput, KeyRepeat};
 pub use shell::Shell;
-pub use traits::{Activity, Widget};
+pub use text::*;
+pub use traits::*;
 
 #[cfg_attr(feature = "rpi-led-panel", path = "frontend_led_panel.rs")]
 #[cfg_attr(feature = "macroquad", path = "frontend_macroquad.rs")]

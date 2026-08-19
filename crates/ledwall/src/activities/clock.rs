@@ -1,6 +1,6 @@
-use chrono::{Datelike, Days, NaiveDate, Timelike, Weekday};
+use chrono::{Datelike, NaiveDate, Timelike, Weekday};
 
-use crate::{Activity, FrameBufferRect, FullInput, Rgb, WHITE, Widget, text};
+use crate::{Activity, FONT_5PX, FONT_10PX, FrameBufferRect, FullInput, Rgb, Text, WHITE, Widget};
 
 #[derive(Debug, Default)]
 pub struct Clock;
@@ -11,18 +11,10 @@ impl Widget<FullInput> for Clock {
         let today = now.date_naive();
         let (pm, hour) = now.hour12();
         let minute = now.minute();
-        crate::text::draw(
-            &format!("{hour:>2}:{minute:02}"),
-            crate::text::FONT_10PX,
-            &mut fb.with_offset([1, 0]),
-            WHITE,
-        );
-        crate::text::draw(
-            if pm { "pm" } else { "am" },
-            crate::text::FONT_5PX,
-            &mut fb.with_offset([23, 12]),
-            WHITE.darken(0.5),
-        );
+        Text::new(format!("{hour:>2}:{minute:02}"), FONT_10PX, WHITE)
+            .draw(&mut fb.with_offset([1, 0]));
+        Text::new(if pm { "pm" } else { "am" }, FONT_5PX, WHITE.darken(0.5))
+            .draw(&mut fb.with_offset([23, 12]));
         // crate::text::draw(
         //     &today.format("%b %-d").to_string(),
         //     crate::text::FONT_5PX,
@@ -31,13 +23,9 @@ impl Widget<FullInput> for Clock {
         // );
 
         // Use hair spaces to keep it compact
-        let text = today.format("%b\u{200A}\u{200A}%-d").to_string();
-        crate::text::draw(
-            &text,
-            crate::text::FONT_5PX,
-            &mut fb.with_offset([32 - text::width(&text, crate::text::FONT_5PX) as isize, 59]),
-            WHITE.darken(0.75),
-        );
+        let s = today.format("%b\u{200A}\u{200A}%-d").to_string();
+        let text = Text::new(s, FONT_5PX, WHITE.darken(0.75));
+        text.draw(&mut fb.with_offset([32 - text.width() as isize, 59]));
 
         let week_count = if today.leap_year()
             && NaiveDate::from_yo_opt(now.year(), 1).is_some_and(|d| d.weekday() == Weekday::Sun)

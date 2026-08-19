@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use rand::RngExt;
 
-use crate::{Activity, BLACK, FPS, FullInput, HEIGHT, Rgb, WHITE, WIDTH, Widget};
+use crate::{Activity, BLACK, FPS, FullInput, HEIGHT, Rgb, TintFn, WHITE, WIDTH, Widget};
 
 const TRAIL_BRIGHTNESS: f32 = 0.625;
 const TRAIL_LIMIT: u8 = 30;
@@ -121,7 +121,9 @@ impl Widget<FullInput> for Life {
 
     fn draw(&self, fb: &mut crate::FrameBufferRect<'_>) {
         self.rainbow.draw(fb);
-        fb.fill_with_fn(|[x, y], rainbow_color| get_color(self.cells[y][x], rainbow_color));
+        fb.fill(TintFn(|[x, y], rainbow_color| {
+            get_color(self.cells[y][x], rainbow_color)
+        }));
     }
 }
 

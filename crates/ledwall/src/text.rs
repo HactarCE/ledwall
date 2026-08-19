@@ -1,20 +1,44 @@
-use crate::{FrameBufferRect, Rgb, StaticImage};
+use std::borrow::Cow;
+
+use crate::{FrameBufferRect, StaticImage, Tint, TintFn, Widget};
 
 pub type Font = fn(char) -> StaticImage;
 
-pub fn width(s: &str, font: Font) -> usize {
-    s.chars()
-        .map(font)
-        .map(|img| img.width() + 1)
-        .sum::<usize>()
-        - 1
+#[derive(Debug, Clone)]
+pub struct Text<'a, T: Tint> {
+    font: Font,
+    s: Cow<'a, str>,
+    tint: T,
+}
+impl<'a, T: Tint> Text<'a, T> {
+    pub fn new(s: impl Into<Cow<'a, str>>, font: Font, tint: T) -> Self {
+        Self {
+            font,
+            s: s.into(),
+            tint,
+        }
+    }
+
+    pub fn width(&self) -> usize {
+        self.s
+            .chars()
+            .map(self.font)
+            .map(|img| img.width() + 1)
+            .sum::<usize>()
+            - 1
+    }
 }
 
-pub fn draw(s: &str, font: Font, fb: &mut FrameBufferRect<'_>, tint: Rgb) {
-    let mut x = 0;
-    for img in s.chars().map(font) {
-        img.draw_tinted(&mut fb.with_offset([x, 0]), tint);
-        x += img.width() as isize + 1;
+impl<'a, T: Tint> Widget for Text<'a, T> {
+    fn draw(&self, fb: &mut FrameBufferRect<'_>) {
+        let mut x = 0;
+        for img in self.s.chars().map(self.font) {
+            img.draw(
+                &mut fb.with_offset([x as isize, 0]),
+                TintFn(|[dx, dy], color| self.tint.eval_tint([x + dx, dy], color)),
+            );
+            x += img.width() + 1;
+        }
     }
 }
 

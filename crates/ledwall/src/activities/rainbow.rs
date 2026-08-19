@@ -1,4 +1,4 @@
-use crate::{Activity, FPS, FrameBufferRect, FullInput, Rgb, Widget};
+use crate::{Activity, FPS, FrameBufferRect, FullInput, Rgb, TintFn, Widget};
 
 pub const DURATION: f32 = 2.0; // seconds
 
@@ -17,11 +17,11 @@ impl Widget<FullInput> for Rainbow {
 
     fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         let t = self.frame as f64 / FPS as f64 / DURATION as f64;
-        fb.fill_with_fn(|[x, y], _| {
-            let color = colorous::RAINBOW
-                .eval_continuous(((x as f64 + y as f64 * 2.0) / 64.0 - t).rem_euclid(1.0));
-            Rgb(color.as_array().map(|x| x))
-        });
+        fb.fill(TintFn(move |[x, y], _| {
+            colorous::RAINBOW
+                .eval_continuous(((x as f64 + y as f64 * 2.0) / 64.0 - t).rem_euclid(1.0))
+                .into()
+        }));
     }
 }
 

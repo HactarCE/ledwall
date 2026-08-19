@@ -111,9 +111,8 @@ impl Widget<[bool; 2]> for LabeledSlider {
     fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         fb.fill(self.slider.color.darken(0.85));
         self.icon
-            .draw_tinted(&mut fb.with_offset([1, 1]), self.slider.color);
-        self.overlay
-            .draw_tinted(&mut fb.with_offset([11, 1]), WHITE);
+            .draw(&mut fb.with_offset([1, 1]), self.slider.color);
+        self.overlay.draw(&mut fb.with_offset([11, 1]), WHITE);
         self.slider
             .draw(&mut fb.with_offset([11, 6]).with_size([20, 2]));
     }

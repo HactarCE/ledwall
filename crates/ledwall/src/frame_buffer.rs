@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{HEIGHT, Rgb, WIDTH};
+use crate::{HEIGHT, Rgb, Tint, WIDTH};
 
 pub type FrameBuffer = [[Rgb; WIDTH]; HEIGHT];
 
@@ -53,15 +53,12 @@ impl<'a> FrameBufferRect<'a> {
         self.size
     }
 
-    pub fn fill(&mut self, color: Rgb) {
-        self.fill_with_fn(|_, _| color);
-    }
-    pub fn fill_with_fn(&mut self, mut get_color: impl FnMut([usize; 2], Rgb) -> Rgb) {
+    pub fn fill(&mut self, tint: impl Tint) {
         let x0 = (-self.offset[0]).max(0) as usize;
         let y0 = (-self.offset[1]).max(0) as usize;
         for (y, row) in self.rows().enumerate() {
             for (x, pixel) in row.iter_mut().enumerate() {
-                *pixel = get_color([x0 + x, y0 + y], *pixel);
+                *pixel = tint.eval_tint([x0 + x, y0 + y], *pixel);
             }
         }
     }
