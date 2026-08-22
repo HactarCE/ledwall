@@ -14,7 +14,7 @@ sudo pkill $BIN_NAME
 set -e
 
 echo "Building on raspi ..."
-~/.cargo/bin/cargo build -p $BIN_NAME --no-default-features --features gilrs,rpi-led-panel
+~/.cargo/bin/cargo +1.90 build -p $BIN_NAME --no-default-features --features gilrs,rpi-led-panel
 echo "Build successful!"
 
 echo "Moving new file ..."

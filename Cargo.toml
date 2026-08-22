@@ -10,7 +10,7 @@ resolver = "3"
 [workspace.package]
 authors = ["Andrew Farkas"]
 edition = "2024"
-rust-version = "1.90.0"
+rust-version = "1.90"
 homepage = "https://ajfarkas.dev/projects/ledwall/"
 repository = "https://github.com/HactarCE/ledwall/"
 license = "MIT OR Apache-2.0"
