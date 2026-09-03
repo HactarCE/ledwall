@@ -1,7 +1,5 @@
-use std::{
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::io::Write;
+use std::path::{Path, PathBuf};
 
 use image::{EncodableLayout, ImageReader};
 use walkdir::WalkDir;

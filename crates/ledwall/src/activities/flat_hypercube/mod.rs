@@ -4,7 +4,6 @@ use flat_hypercube_logic::{Facet, Piece, Pos4, Puzzle, Turn};
 
 mod animations;
 mod constants;
-mod input;
 
 use crate::{
     Activity, AnimationFrame, ArrayVec, BLACK, FONT_5PX, FrameBufferRect, FullInput, Rgb, Text,

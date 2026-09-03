@@ -1,9 +1,9 @@
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
-use rand::RngExt;
 use rand::distr::{Distribution, StandardUniform};
-use rand::{Rng, seq::IndexedRandom};
+use rand::seq::IndexedRandom;
+use rand::{Rng, RngExt};
 
 use crate::{Axis, Pos4, Sign};
 

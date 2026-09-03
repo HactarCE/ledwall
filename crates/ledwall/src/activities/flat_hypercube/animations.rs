@@ -2,9 +2,8 @@ use std::f32::consts::PI;
 
 use flat_hypercube_logic::{Facet, FloatPos4, Pos4, Turn};
 
-use crate::AnimationFrame;
-
 use super::constants;
+use crate::AnimationFrame;
 
 #[derive(Debug, Default)]
 pub struct BlinkAnimation {

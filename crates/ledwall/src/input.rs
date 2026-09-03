@@ -1,7 +1,5 @@
-use std::{
-    ops::{BitAnd, BitOr, BitXor, Not},
-    time::{Duration, Instant},
-};
+use std::ops::{BitAnd, BitOr, BitXor, Not};
+use std::time::{Duration, Instant};
 
 const DELAY: f32 = 1.0 / 3.0; // number of seconds
 const RATE: f32 = 1.0 / 16.0; // number of seconds

@@ -4,13 +4,14 @@ mod animations;
 mod constants;
 mod display;
 
+use animations::*;
+use constants::{colors, coordinates};
+use display::Transform;
+
 use crate::{
     Activity, FrameBufferRect, FullInput, StaticImage, Widget, draw_opt_animation,
     step_opt_animation,
 };
-use animations::*;
-use constants::{colors, coordinates};
-use display::Transform;
 
 pub struct Tetris {
     game: tetris_logic::Game<u64>,

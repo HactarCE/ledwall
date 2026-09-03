@@ -1,7 +1,5 @@
-use std::{
-    f32::consts::FRAC_PI_2,
-    ops::{Index, IndexMut},
-};
+use std::f32::consts::FRAC_PI_2;
+use std::ops::{Index, IndexMut};
 
 use crate::{Axis, Facet, Pos4};
 
