@@ -37,6 +37,7 @@ fn init_matrix(brightness: u8) -> (RGBMatrix, Box<Canvas>) {
         rows: WIDTH,
         refresh_rate: FPS,
         dither_bits: 2,
+        drop_priv_user: String::from(env!("USER")),
         ..Default::default()
     };
     RGBMatrix::new(config, 0).expect("error initializing matrix")

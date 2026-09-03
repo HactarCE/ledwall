@@ -38,17 +38,20 @@ impl<T: 'static + Send> Widget for WebLoader<T> {
         if self.waiting {
             match self.result_rx.try_recv() {
                 Ok(Some(new_value)) => {
+                    self.retries = 0;
                     self.waiting = false;
                     self.loaded_value = Some(new_value);
                     self.next_fetch = self.config.refresh_freq.map(|d| Instant::now() + d);
                 }
                 Ok(None) => {
-                    self.waiting = false;
                     self.retries += 1;
-                    if 0 < self.config.max_retries && self.config.max_retries <= self.retries {
+                    self.waiting = false;
+                    if self.retries < self.config.max_quick_retries {
+                        self.next_fetch = Some(Instant::now() + self.config.quick_retry_freq);
+                    } else {
                         self.invalidate();
+                        self.next_fetch = Some(Instant::now() + self.config.slow_retry_freq);
                     }
-                    self.next_fetch = Some(Instant::now() + self.config.retry_freq);
                 }
                 Err(mpsc::TryRecvError::Disconnected) => self.channel_disconnected = true,
                 Err(mpsc::TryRecvError::Empty) => (), // keep waiting
@@ -126,20 +129,31 @@ impl<T: 'static + Send> WebLoader<T> {
 pub struct WebLoaderConfig {
     /// How long to wait before automatically refreshing the display. If this is
     /// `None`, then the display is never automatically refreshed.
+    ///
+    /// Default: 5 minutes
     pub refresh_freq: Option<Duration>,
-    /// How long to wait between retries.
-    pub retry_freq: Duration,
-    /// Maximum number of retries before erasing the existing data and returning
-    /// to a loading animation. Set this to `0` to never invalidate the data.
-    pub max_retries: usize,
+    /// Maximum number of "quick" retries to do before erasing the cached data
+    /// and switching to "slow" retries.
+    ///
+    /// Default: 3
+    pub max_quick_retries: usize,
+    /// How long to wait between "quick" retries.
+    ///
+    /// Default: 5 seconds
+    pub quick_retry_freq: Duration,
+    /// How long to wait between "slow" retries.
+    ///
+    /// Default: 5 minutes
+    pub slow_retry_freq: Duration,
 }
 
 impl Default for WebLoaderConfig {
     fn default() -> Self {
         Self {
             refresh_freq: Some(Duration::from_secs(5 * 60)),
-            retry_freq: Duration::from_secs(5 * 60),
-            max_retries: 2,
+            max_quick_retries: 3,
+            quick_retry_freq: Duration::from_secs(5),
+            slow_retry_freq: Duration::from_secs(5 * 60),
         }
     }
 }
