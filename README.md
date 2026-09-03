@@ -152,3 +152,26 @@ Host pi
 To update, simply run `./update.sh` on your development machine. This script assumes that you have an SSH host called `pi` to deploy to. It will automatically run `./reprocess_images.sh`.
 
 If you are running Linux, you may be able to cross-compile instead of compiling the Rust code on the Raspberry Pi. I think this requires `pkg-config` being able to find headers for `uinput`, which I don't know how to do on macOS.
+
+## Google Calendar setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. [Enable the Google Calendar API](https://console.cloud.google.com/flows/enableapi?apiid=calendar-json.googleapis.com&authuser=0) in the project
+4. [Configure the Google Auth Platform](https://console.cloud.google.com/auth/overview/create?authuser=0&project=led-wall-506221) for the project
+5. [Create a Client](https://console.cloud.google.com/auth/clients/create?authuser=0) in the project
+6. Download JSON for the client and save the file in `calendar_client_secret.json` in the project directory
+7. Add yourself as a Test User in the project's [Audience](https://console.cloud.google.com/auth/audience)
+8. Create a file `calendars.txt` in the root folder of the repository with the colors and email addresses for the calendars you want (see example below)
+9. Run `cargo run -p calendar_auth` on your test machine and follow the instructions
+10. Run `./copy_calendar_files.sh` on your test machine to copy the relevant files to the Raspberry Pi
+
+If you ever do not run the LED wall for a week, you will need to redo steps 9 and 10.
+
+### Example `calendars.txt`
+
+```
+FF0000 red_calendar@gmail.com
+00FF00 green_calendar@gmail.com
+0000FF blue_calendar@gmail.com
+```

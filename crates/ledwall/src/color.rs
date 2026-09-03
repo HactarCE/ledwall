@@ -2,6 +2,7 @@ use crate::mix;
 
 pub const BLACK: Rgb = Rgb::from_hex(0x000000);
 pub const WHITE: Rgb = Rgb::from_hex(0xFFFFFF);
+pub const RED: Rgb = Rgb::from_hex(0xFF0000);
 
 /// sRGB color 0-255
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash, bytemuck::Pod, bytemuck::Zeroable)]

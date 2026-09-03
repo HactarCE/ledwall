@@ -21,4 +21,5 @@ echo "Moving new file ..."
 mv ~/ledwall_target_cache/debug/$BIN_NAME ~
 
 echo "Running process '$BIN_NAME' ..."
+cd ~
 sudo nohup ~/$BIN_NAME >/dev/null 2>&1 </dev/null & disown

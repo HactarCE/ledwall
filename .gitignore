@@ -2,3 +2,7 @@
 *.kra
 *.kra~
 *.png~
+
+calendar_credentials.json
+calendar_token.json
+calendars.txt

@@ -117,5 +117,6 @@ pub const FONT_10PX: Font = |c| match c {
     '8' => include_rgba_image!("font_10px/8.rgba"),
     '9' => include_rgba_image!("font_10px/9.rgba"),
     ':' => include_rgba_image!("font_10px/colon.rgba"),
+    '\u{200A}' => StaticImage::EMPTY, // hair space
     _ => include_rgba_image!("font_10px/unknown.rgba"),
 };

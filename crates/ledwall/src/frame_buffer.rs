@@ -1,3 +1,4 @@
+use std::fmt;
 use std::ops::{Index, IndexMut};
 
 use crate::{HEIGHT, Rgb, Tint, WIDTH};
@@ -9,6 +10,15 @@ pub struct FrameBufferRect<'a> {
     frame_buffer: &'a mut FrameBuffer,
     offset: [isize; 2],
     size: [usize; 2],
+}
+
+impl fmt::Debug for FrameBufferRect<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FrameBufferRect")
+            .field("offset", &self.offset)
+            .field("size", &self.size)
+            .finish()
+    }
 }
 
 impl<'a> FrameBufferRect<'a> {
@@ -41,6 +51,37 @@ impl<'a> FrameBufferRect<'a> {
             offset: self.offset,
             size: [width.min(w), height.min(h)],
         }
+    }
+    /// Returns a rectangular subregion, given the coordinates of the top left
+    /// and the size.
+    pub fn rect<'b>(
+        &'b mut self,
+        [dx, dy]: [isize; 2],
+        [width, height]: [usize; 2],
+    ) -> FrameBufferRect<'b> {
+        let [x, y] = self.offset;
+        let [w, h] = self.size;
+
+        FrameBufferRect {
+            frame_buffer: self.frame_buffer,
+            offset: [x + dx, y + dy],
+            size: [
+                width.min((w as isize - dx).max(0) as usize),
+                height.min((h as isize - dy).max(0) as usize),
+            ],
+        }
+    }
+    /// Returns a centered rectangular subregion.
+    pub fn centered_rect<'b>(&'b mut self, [width, height]: [usize; 2]) -> FrameBufferRect<'b> {
+        let [w, h] = self.size;
+        let dx = w.saturating_sub(width) as isize / 2;
+        let dy = h.saturating_sub(height) as isize / 2;
+        self.rect([dx, dy], [width, height])
+    }
+    /// Returns the largest centered square subregion.
+    pub fn centered_square<'b>(&'b mut self) -> FrameBufferRect<'b> {
+        let [w, h] = self.size;
+        self.centered_rect([std::cmp::min(w, h); 2])
     }
 
     pub fn width(&self) -> usize {
@@ -87,9 +128,9 @@ impl<'a> FrameBufferRect<'a> {
             .get_mut(usize::try_from(bx + x as isize).ok()?)
     }
 
-    pub fn set(&mut self, x: usize, y: usize, color: Rgb) {
+    pub fn set(&mut self, x: usize, y: usize, tint: impl Tint) {
         if let Some(out) = self.get_mut(x, y) {
-            *out = color;
+            *out = tint.eval_tint([x, y], *out);
         }
     }
 }

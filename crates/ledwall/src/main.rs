@@ -5,6 +5,7 @@ mod animation;
 
 mod activities;
 mod array_vec;
+mod calendar;
 mod color;
 mod frame_buffer;
 mod input;
@@ -36,7 +37,7 @@ pub const WIDTH: usize = 32;
 pub const HEIGHT: usize = 64;
 
 pub const DEFAULT_VOLUME: u8 = 10; // 0..=20
-pub const DEFAULT_BRIGHTNESS: u8 = 12; // 0..=20
+pub const DEFAULT_BRIGHTNESS: u8 = 20; // 0..=20
 
 fn main() {
     frontend::main();

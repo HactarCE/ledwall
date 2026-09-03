@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/calendar_auth",
     "crates/flat_hypercube_logic",
     "crates/ledwall",
     "crates/preprocess_image",
@@ -45,3 +46,6 @@ opt-level = 1
 flat_hypercube_logic = { path = "crates/flat_hypercube_logic" }
 tetris_logic = { path = "crates/tetris_logic" }
 rand = { version = "0.10.2", default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+ureq = { version = "3.4.0", features = ["json"] }

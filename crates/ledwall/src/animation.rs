@@ -33,8 +33,12 @@ pub trait AnimationFrame {
     }
 }
 
-pub trait Animation<D>: AnimationFrame {
+pub trait Animation<D = ()>: AnimationFrame {
     fn draw(&self, fb: &mut FrameBufferRect<'_>, data: D);
+}
+
+pub fn step_cyclic_animation<A: AnimationFrame>(anim: &mut A) {
+    *anim.frame_number_mut() = (anim.frame_number() + 1) % A::FRAME_COUNT;
 }
 
 pub fn step_opt_animation<A: AnimationFrame>(opt_anim: &mut Option<A>) -> Option<A> {
