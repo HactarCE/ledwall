@@ -13,6 +13,7 @@ impl Widget<FullInput> for InputTest {
     fn draw(&self, fb: &mut FrameBufferRect<'_>) {
         for (i, controller) in [self.input.blue, self.input.green].iter().enumerate() {
             let x0 = i * 8;
+            #[expect(clippy::identity_op)]
             if let Some(c) = controller {
                 fb.set(x0 + 0, 0, color(c.current.up));
                 fb.set(x0 + 1, 0, color(c.current.down));

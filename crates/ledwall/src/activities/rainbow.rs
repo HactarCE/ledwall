@@ -1,4 +1,4 @@
-use crate::{Activity, FPS, FrameBufferRect, FullInput, Rgb, TintFn, Widget};
+use crate::{Activity, FPS, FrameBufferRect, FullInput, TintFn, Widget};
 
 pub const DURATION: f32 = 2.0; // seconds
 

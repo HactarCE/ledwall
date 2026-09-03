@@ -1,3 +1,4 @@
+use std::fmt;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -42,12 +43,12 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
         self.len += 1;
     }
 
-    pub fn try_push(&mut self, element: T) -> Result<(), ()> {
+    pub fn try_push(&mut self, element: T) -> Result<(), ExceededCapacity> {
         if (self.len as usize) < CAP {
             self.push(element);
             Ok(())
         } else {
-            Err(())
+            Err(ExceededCapacity)
         }
     }
 
@@ -67,3 +68,14 @@ impl<T: Default, const CAP: usize> FromIterator<T> for ArrayVec<T, CAP> {
         ret
     }
 }
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+pub struct ExceededCapacity;
+
+impl fmt::Display for ExceededCapacity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "exceeded ArrayVec capacity")
+    }
+}
+
+impl std::error::Error for ExceededCapacity {}
