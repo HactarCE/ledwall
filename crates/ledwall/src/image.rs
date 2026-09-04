@@ -11,8 +11,14 @@ macro_rules! include_rgba_image {
 }
 
 /// Static RGBA image.
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct StaticImage(pub &'static [u8]);
+
+impl Default for StaticImage {
+    fn default() -> Self {
+        Self(&[0_u8; 8])
+    }
+}
 
 impl StaticImage {
     pub const EMPTY: Self = Self(&[0_u8; 8]);

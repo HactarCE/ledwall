@@ -5,8 +5,8 @@ use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveTime, TimeDelta, Timelik
 use crate::calendar::CalendarEventStatus;
 use crate::widgets::{WebLoader, WebLoaderConfig};
 use crate::{
-    Activity, FONT_5PX, FONT_10PX, FrameBufferRect, FullInput, Rgb, Text, Tint, TintFn, WHITE,
-    Widget,
+    Activity, FONT_MONO_DIGITS_10PX, FONT_PROP_5PX, FrameBufferRect, FullInput, Rgb, Text, Tint,
+    TintFn, WHITE, Widget,
 };
 
 const CALENDAR_IDS: &str = include_str!("../../../../calendars.txt");
@@ -94,13 +94,13 @@ impl Widget<FullInput> for Clock {
         });
         Text::new(
             format!("{hour:>2}\u{200A}:\u{200A}{minute:02}"),
-            FONT_10PX,
+            &FONT_MONO_DIGITS_10PX,
             soft_rainbow.at([0, 0]),
         )
         .draw(&mut fb.with_offset([0, 0]));
         Text::new(
             if pm { "pm" } else { "am" },
-            FONT_5PX,
+            &FONT_PROP_5PX,
             soft_rainbow.at([23, 12]),
         )
         .draw(&mut fb.with_offset([23, 12]));
@@ -108,7 +108,7 @@ impl Widget<FullInput> for Clock {
         // Draw month/day, using hair spaces for legibility
         let text = Text::new(
             today.format("%-m\u{200A}/\u{200A}%-d").to_string(),
-            FONT_5PX,
+            &FONT_PROP_5PX,
             WHITE.darken(0.25),
         );
         text.draw(&mut fb.with_offset([32 - text.width() as isize, 59]));

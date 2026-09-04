@@ -7,6 +7,7 @@ mod activities;
 mod array_vec;
 mod calendar;
 mod color;
+mod font;
 mod frame_buffer;
 mod input;
 mod shell;
@@ -21,6 +22,7 @@ pub use animation::{
 };
 pub use array_vec::ArrayVec;
 pub use color::*;
+pub use font::*;
 pub use frame_buffer::{FrameBuffer, FrameBufferRect};
 pub use image::StaticImage;
 pub use input::{Buttons, ControllerInput, FullInput, KeyRepeat};

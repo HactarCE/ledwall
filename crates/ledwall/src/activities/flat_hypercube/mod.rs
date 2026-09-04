@@ -6,8 +6,8 @@ mod animations;
 mod constants;
 
 use crate::{
-    Activity, AnimationFrame, ArrayVec, BLACK, FONT_5PX, FrameBufferRect, FullInput, Rgb, Text,
-    WHITE, Widget, step_opt_animation,
+    Activity, AnimationFrame, ArrayVec, BLACK, FONT_MONO_DIGITS_5PX, FrameBufferRect, FullInput,
+    Rgb, Text, WHITE, Widget, step_opt_animation,
 };
 
 #[derive(Debug, Default)]
@@ -407,7 +407,7 @@ impl Widget<FullInput> for FlatHypercube {
             } else {
                 colors::TIMER_RUNNING
             };
-            let text = Text::new(timer_string, FONT_5PX, timer_color);
+            let text = Text::new(timer_string, &FONT_MONO_DIGITS_5PX, timer_color);
             text.draw(&mut fb.with_offset([
                 fb.width() as isize - text.width() as isize - 1,
                 fb.height() as isize - 6,
