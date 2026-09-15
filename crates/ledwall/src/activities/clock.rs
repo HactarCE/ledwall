@@ -107,7 +107,7 @@ impl Widget<FullInput> for Clock {
 
         // Draw month/day, using hair spaces for legibility
         let text = Text::new(
-            today.format("%-m\u{200A}/\u{200A}%-d").to_string(),
+            today.format("%-m/%-d").to_string(),
             &FONT_PROP_5PX,
             WHITE.darken(0.25),
         );
