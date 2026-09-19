@@ -107,7 +107,6 @@ mod auth {
         refresh_token: String,
         scope: String,
         token_type: String,
-        refresh_token_expires_in: u64,
     }
 
     static ACCESS_TOKEN_CONDVAR: Condvar = Condvar::new();

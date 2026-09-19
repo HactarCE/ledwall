@@ -166,7 +166,15 @@ If you are running Linux, you may be able to cross-compile instead of compiling 
 9. Run `cargo run -p calendar_auth` on your test machine and follow the instructions
 10. Run `./copy_calendar_files.sh` on your test machine to copy the relevant files to the Raspberry Pi
 
-If you ever do not run the LED wall for a week, you will need to redo steps 9 and 10.
+If the token is revoked for some reason, you will need to redo steps 9 and 10.
+
+The token will automatically be revoked after 7 days unless you publish the app to take it out of "testing mode":
+
+1. In the Google Cloud Console, go to **APIs & Services**, then **OAuth consent screen**, then **Branding**
+2. Fill out all the URLs
+3. Click **Save**
+4. Go to **Audience**
+5. Click **Publish app**
 
 ### Example `calendars.txt`
 
