@@ -149,6 +149,7 @@ Host pi
 6. Turn on the controllers and observe the UUIDs. If they are already on, turn them off and then on again while the program is running.
 7. Edit `crates/ledwall/src/shell.rs` and set the `BLUE_CONTROLLER_UUID` and `GREEN_CONTROLLER_UUID` variables accordingly.
 8. Create a file `location.txt` containing a lattitude on the first line and longitude on the second line. For example:
+9. Run `./copy_config_to_pi.sh` on your test machine to copy the relevant files to the Raspberry Pi
 
 ```
 40.7128
@@ -170,7 +171,7 @@ If you are running Linux, you may be able to cross-compile instead of compiling 
 7. Add yourself as a Test User in the project's [Audience](https://console.cloud.google.com/auth/audience)
 8. Create a file `calendars.txt` in the root folder of the repository with the colors and email addresses for the calendars you want (see example below)
 9. Run `cargo run -p calendar_auth` on your test machine and follow the instructions
-10. Run `./copy_calendar_files.sh` on your test machine to copy the relevant files to the Raspberry Pi
+10. Run `./copy_config_to_pi.sh` on your test machine to copy the relevant files to the Raspberry Pi
 
 If the token is revoked for some reason, you will need to redo steps 9 and 10.
 
