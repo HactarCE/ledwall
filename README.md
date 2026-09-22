@@ -148,6 +148,12 @@ Host pi
 5. SSH into the Raspberry Pi and restart the LED wall: `sudo pkill ledwall && sudo ~/ledwall`.
 6. Turn on the controllers and observe the UUIDs. If they are already on, turn them off and then on again while the program is running.
 7. Edit `crates/ledwall/src/shell.rs` and set the `BLUE_CONTROLLER_UUID` and `GREEN_CONTROLLER_UUID` variables accordingly.
+8. Create a file `location.txt` containing a lattitude on the first line and longitude on the second line. For example:
+
+```
+40.7128
+-74.0060
+```
 
 To update, simply run `./update.sh` on your development machine. This script assumes that you have an SSH host called `pi` to deploy to. It will automatically run `./reprocess_images.sh`.
 

@@ -13,6 +13,7 @@ mod input;
 mod shell;
 mod text;
 mod traits;
+mod weather;
 mod widgets;
 
 use std::ops::Range;

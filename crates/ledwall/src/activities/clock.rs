@@ -3,10 +3,11 @@ use std::sync::LazyLock;
 use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveTime, TimeDelta, Timelike, Weekday};
 
 use crate::calendar::CalendarEventStatus;
+use crate::weather::WeatherForecast;
 use crate::widgets::{WebLoader, WebLoaderConfig};
 use crate::{
-    Activity, FONT_MONO_DIGITS_10PX, FONT_PROP_5PX, FrameBufferRect, FullInput, Rgb, Text, Tint,
-    TintFn, WHITE, Widget,
+    Activity, FONT_MONO_DIGITS_5PX, FONT_MONO_DIGITS_10PX, FONT_PROP_5PX, FrameBufferRect,
+    FullInput, Rgb, Text, Tint, TintFn, WHITE, Widget,
 };
 
 const CALENDAR_IDS: &str = include_str!("../../../../calendars.txt");
@@ -25,6 +26,9 @@ static TIME_CHUNKS: LazyLock<Vec<[NaiveTime; 2]>> = LazyLock::new(|| {
         .collect()
 });
 
+/// Millimeter thresholds for adding another pixel to the rain meter.
+const RAINFALL_PIXEL_THRESHOLDS: &[f64] = &[0.0, 1.0, 3.0, 8.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0];
+
 #[derive(Debug)]
 struct CalendarTaskOutput {
     date: NaiveDate,
@@ -41,6 +45,7 @@ struct CalendarData {
 pub struct Clock {
     now: DateTime<Local>,
     calendar_task: WebLoader<CalendarTaskOutput>,
+    forecast: WebLoader<WeatherForecast>,
 }
 
 impl Default for Clock {
@@ -48,6 +53,15 @@ impl Default for Clock {
         Self {
             now: Local::now(),
             calendar_task: WebLoader::new(WebLoaderConfig::default(), fetch_calendar_events),
+            forecast: WebLoader::new(WebLoaderConfig::default(), || {
+                match crate::weather::fetch_weather() {
+                    Ok(forecast) => Some(forecast),
+                    Err(e) => {
+                        eprintln!("error fetching weather forecast: {e:?}");
+                        None
+                    }
+                }
+            }),
         }
     }
 }
@@ -71,8 +85,10 @@ impl Widget<FullInput> for Clock {
             && task_output.date != self.now.date_naive()
         {
             self.calendar_task.invalidate();
+            self.forecast.invalidate();
         }
         self.calendar_task.step(());
+        self.forecast.step(());
     }
 
     fn draw(&self, fb: &mut FrameBufferRect<'_>) {
@@ -216,6 +232,35 @@ impl Widget<FullInput> for Clock {
                     }
                 }
             }
+        }
+
+        if let Some(forecast) = self.forecast.get() {
+            // Draw rainfall
+            for (i, &[start_time, _end_time]) in TIME_CHUNKS.iter().enumerate() {
+                if let Some(mm_rain) = forecast.rainfall.get(&today.and_time(start_time)) {
+                    let rain_width = RAINFALL_PIXEL_THRESHOLDS
+                        .iter()
+                        .filter(|&threshold| mm_rain > threshold)
+                        .count();
+                    fb.rect(
+                        [x - 3 - rain_width as isize, y + i as isize],
+                        [rain_width as usize, 1],
+                    )
+                    .fill(Rgb::from_hex(0x0000FF));
+                }
+            }
+
+            // Draw temperature
+            let current_temp = forecast.current_temperature;
+            let lo_temp = 40.0;
+            let hi_temp = 100.0;
+            let t = ((current_temp - lo_temp) / (hi_temp - lo_temp)).clamp(0.0, 1.0);
+            Text::new(
+                format!("{:03}°", current_temp.round()),
+                &FONT_MONO_DIGITS_5PX,
+                Rgb::from(colorous::RED_YELLOW_BLUE.eval_continuous(1.0 - t)),
+            )
+            .draw(&mut fb.with_offset([11, y - 1]));
         }
     }
 }
