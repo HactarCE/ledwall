@@ -188,26 +188,24 @@ impl Widget<FullInput> for Clock {
             fb.set(x as usize - 1, y as usize + h - 1, c);
             fb.set(x as usize + w, y as usize + h - 1, c);
 
-            let mut draw_time_indicator = |time: NaiveTime, ends_color: Rgb, fill_color: Rgb| {
-                if let Some(i) = TIME_CHUNKS
+            let y_from_time = |time: NaiveTime| -> Option<isize> {
+                TIME_CHUNKS
                     .iter()
                     .position(|&[lo, hi]| lo <= time && time < hi)
-                {
-                    let mut row = fb.rect([x - 1, y + i as isize], [w + 2, 1]);
-                    row.fill(ends_color);
-                    row.rect([1, 0], [w, 1]).fill(fill_color);
-                }
+                    .map(|dy| y + dy as isize)
             };
 
             // Draw indicators
-            for (hour, color) in [(12, Rgb::from_hex(0x00CCFF)), (18, Rgb::from_hex(0xFF9900))] {
-                draw_time_indicator(
-                    NaiveTime::from_hms_opt(hour, 0, 0).unwrap(),
-                    color.darken(0.7),
-                    color.darken(0.8),
-                );
+            for hour in [12, 18] {
+                let hour_row = y_from_time(NaiveTime::from_hms_opt(hour, 0, 0).unwrap());
+                fb.set(x as usize + w, hour_row.unwrap() as usize, c);
             }
-            draw_time_indicator(now.time(), WHITE, WHITE.darken(0.75));
+            if let Some(now_row) = y_from_time(now.time()) {
+                let mut now_row_fb = fb.rect([x - 1, now_row], [w + 2, 1]);
+                now_row_fb.fill(WHITE.darken(0.75));
+                now_row_fb.set(0, 0, WHITE);
+                now_row_fb.set(w + 1, 0, WHITE);
+            }
 
             // Draw events
             let Some([start_of_day, end_of_day]) = day_bounds(task_output.date) else {
@@ -243,7 +241,7 @@ impl Widget<FullInput> for Clock {
                         .filter(|&threshold| mm_rain > threshold)
                         .count();
                     fb.rect(
-                        [x - 3 - rain_width as isize, y + i as isize],
+                        [x - 2 - rain_width as isize, y + i as isize],
                         [rain_width, 1],
                     )
                     .fill(Rgb::from_hex(0x0000FF));
@@ -256,7 +254,7 @@ impl Widget<FullInput> for Clock {
             let hi_temp = 100.0;
             let t = ((current_temp - lo_temp) / (hi_temp - lo_temp)).clamp(0.0, 1.0);
             Text::new(
-                format!("{:03}°", current_temp.round()),
+                format!("{:3}°", current_temp.round()),
                 &FONT_MONO_DIGITS_5PX,
                 Rgb::from(colorous::RED_YELLOW_BLUE.eval_continuous(1.0 - t)),
             )
