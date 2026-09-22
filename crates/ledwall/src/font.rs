@@ -1,4 +1,6 @@
-use std::{collections::HashMap, fmt, sync::LazyLock};
+use std::collections::HashMap;
+use std::fmt;
+use std::sync::LazyLock;
 
 use crate::StaticImage;
 
@@ -50,7 +52,6 @@ impl Font {
                 current_chars = vec!['\0'];
             } else if let Some(rest) = line.strip_prefix("c ") {
                 current_chars = rest
-                    .trim()
                     .split_whitespace()
                     .map(|s| exactly_one_char(i, s))
                     .collect::<Result<Vec<char>, FontLoadError>>()?;
@@ -103,7 +104,7 @@ impl Font {
                                 }
                             })
                             .collect::<Result<Vec<bool>, FontLoadError>>()?,
-                    )
+                    );
                 }
             }
         }

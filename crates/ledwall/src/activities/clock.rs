@@ -244,7 +244,7 @@ impl Widget<FullInput> for Clock {
                         .count();
                     fb.rect(
                         [x - 3 - rain_width as isize, y + i as isize],
-                        [rain_width as usize, 1],
+                        [rain_width, 1],
                     )
                     .fill(Rgb::from_hex(0x0000FF));
                 }
