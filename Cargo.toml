@@ -46,7 +46,7 @@ opt-level = 1
 flat_hypercube_logic = { path = "crates/flat_hypercube_logic" }
 tetris_logic = { path = "crates/tetris_logic" }
 eyre = "0.6.14"
-rand = { version = "0.10.2", default-features = false }
+rand = { version = "0.10.3", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
-ureq = { version = "3.4.0", features = ["json"] }
+ureq = { version = "3.4.2", features = ["json"] }
