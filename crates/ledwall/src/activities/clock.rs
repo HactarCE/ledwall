@@ -28,6 +28,7 @@ static TIME_CHUNKS: LazyLock<Vec<[NaiveTime; 2]>> = LazyLock::new(|| {
 
 /// Millimeter thresholds for adding another pixel to the rain meter.
 const RAINFALL_PIXEL_THRESHOLDS: &[f64] = &[0.0, 1.0, 3.0, 8.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0];
+const RAINFALL_COLOR: Rgb = Rgb::from_hex(0x000099);
 
 #[derive(Debug)]
 struct CalendarTaskOutput {
@@ -244,7 +245,7 @@ impl Widget<FullInput> for Clock {
                         [x - 2 - rain_width as isize, y + i as isize],
                         [rain_width, 1],
                     )
-                    .fill(Rgb::from_hex(0x0000FF));
+                    .fill(RAINFALL_COLOR);
                 }
             }
 
