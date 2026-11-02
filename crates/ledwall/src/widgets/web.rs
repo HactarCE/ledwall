@@ -124,7 +124,7 @@ impl<T: 'static + Send> WebLoader<T> {
     }
 }
 
-/// Configuration for a [`WebDisplay`].
+/// Configuration for a [`WebLoader`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct WebLoaderConfig {
     /// How long to wait before automatically refreshing the display. If this is
@@ -139,11 +139,11 @@ pub struct WebLoaderConfig {
     pub max_quick_retries: usize,
     /// How long to wait between "quick" retries.
     ///
-    /// Default: 5 seconds
+    /// Default: 10 seconds
     pub quick_retry_freq: Duration,
     /// How long to wait between "slow" retries.
     ///
-    /// Default: 5 minutes
+    /// Default: 1 minute
     pub slow_retry_freq: Duration,
 }
 
@@ -152,8 +152,8 @@ impl Default for WebLoaderConfig {
         Self {
             refresh_freq: Some(Duration::from_secs(5 * 60)),
             max_quick_retries: 3,
-            quick_retry_freq: Duration::from_secs(5),
-            slow_retry_freq: Duration::from_secs(5 * 60),
+            quick_retry_freq: Duration::from_secs(10),
+            slow_retry_freq: Duration::from_secs(60),
         }
     }
 }
