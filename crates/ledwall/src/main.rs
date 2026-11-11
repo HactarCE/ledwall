@@ -43,6 +43,16 @@ pub const DEFAULT_VOLUME: u8 = 10; // 0..=20
 pub const DEFAULT_BRIGHTNESS: u8 = 20; // 0..=20
 
 fn main() {
+    std::panic::set_hook(Box::new(|panic_info| {
+        let panic_report_path = std::env::current_exe()
+            .expect("error getting executable path")
+            .parent()
+            .expect("error getting executable dir")
+            .join(format!("panic {}.txt", chrono::Utc::now()));
+        std::fs::write(panic_report_path, format!("{panic_info:#}"))
+            .expect("error writing panic report");
+    }));
+
     frontend::main();
 }
 
