@@ -56,8 +56,7 @@ impl<T: 'static + Send> Widget for WebLoader<T> {
                 Err(mpsc::TryRecvError::Disconnected) => self.channel_disconnected = true,
                 Err(mpsc::TryRecvError::Empty) => (), // keep waiting
             }
-        } else if self.loaded_value.is_none() || self.next_fetch.is_some_and(|t| t < Instant::now())
-        {
+        } else if self.next_fetch.is_some_and(|t| t < Instant::now()) {
             match self.request_tx.send(()) {
                 Ok(()) => {
                     self.waiting = true;
@@ -90,10 +89,12 @@ impl<T: 'static + Send> WebLoader<T> {
         let (request_tx, request_rx) = mpsc::channel();
         let (result_tx, result_rx) = mpsc::channel();
 
-        std::thread::spawn(move || -> Option<()> {
-            loop {
-                request_rx.recv().ok()?;
-                result_tx.send(f()).ok()?;
+        std::thread::spawn(move || {
+            for () in request_rx {
+                if let Err(e) = result_tx.send(f()) {
+                    eprintln!("{e}");
+                    break;
+                }
             }
         });
 
