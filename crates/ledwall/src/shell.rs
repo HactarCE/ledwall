@@ -24,7 +24,7 @@ const BACKGROUND_DIM: f32 = 0.875;
 
 #[derive(Debug, Default)]
 pub struct ShellFrameOutput {
-    pub new_brightness: Option<u8>,
+    pub new_brightness_percent: Option<u8>,
 }
 
 /// Graphical shell that provides access to system settings and multiple apps.
@@ -314,7 +314,7 @@ impl Shell {
 
             let new_brightness = self.brightness_slider.slider.get();
             if new_brightness != old_brightness {
-                output.new_brightness = Some(new_brightness);
+                output.new_brightness_percent = Some(new_brightness * 5);
             }
         }
 

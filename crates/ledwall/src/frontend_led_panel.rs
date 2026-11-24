@@ -13,8 +13,8 @@ pub fn main() {
 
         // Update state
         let output = shell.update(blue, green);
-        if let Some(new_brightness) = output.new_brightness {
-            (matrix, canvas) = init_matrix(new_brightness);
+        if let Some(new_brightness) = output.new_brightness_percent {
+            matrix.set_brightness(new_brightness);
         }
 
         // Update canvas
@@ -25,11 +25,13 @@ pub fn main() {
         }
 
         // Update display and wait for next frame
-        canvas = matrix.update_on_vsync(canvas);
+        canvas = matrix
+            .update_on_vsync(canvas)
+            .expect("error updating matrix");
     }
 }
 
-fn init_matrix(brightness: u8) -> (RGBMatrix, Box<Canvas>) {
+fn init_matrix(brightness: u8) -> (RGBMatrix, Canvas) {
     let config = RGBMatrixConfig {
         led_brightness: brightness * 5, // 0..=100
         hardware_mapping: HardwareMapping::adafruit_hat_pwm(),
@@ -40,5 +42,5 @@ fn init_matrix(brightness: u8) -> (RGBMatrix, Box<Canvas>) {
         drop_priv_user: String::from(env!("USER")),
         ..Default::default()
     };
-    RGBMatrix::new(config, 0).expect("error initializing matrix")
+    RGBMatrix::new(config).expect("error initializing matrix")
 }
